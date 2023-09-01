@@ -15,6 +15,7 @@ go-redislock is a library for Go that provides distributed lock functionality us
 ## Quick start
 
 ### Install
+
 ```bash
 go get -u github.com/jefferyjob/go-redislock
 ```
