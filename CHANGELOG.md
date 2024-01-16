@@ -5,3 +5,5 @@
 - Provides an easy-to-use API to easily implement functions such as lock, unlock, spin lock, automatic renewal and manual renewal
 - Support custom timeout and automatic renewal, flexible configuration according to actual needs
 
+## v1.0.1
+- Fix package name issue
