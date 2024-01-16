@@ -1,4 +1,4 @@
-package main
+package go_redislock
 
 const (
 	// 加锁
