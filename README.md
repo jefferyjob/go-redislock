@@ -22,7 +22,7 @@ go get -u github.com/jefferyjob/go-redislock
 
 ### Use Demo
 
-The SDK is already compatible with Redis clients, so the 'go redis/Redis' package you introduced needs to be greater than or equal to 8.
+The SDK is already compatible with Redis clients, so the `go-redis/redis` package you introduced needs to be greater than or equal to 8.
 
 ```go
 package main
