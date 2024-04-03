@@ -13,7 +13,7 @@ func (lock *RedisLock) Lock() error {
 	lock.mutex.Lock()
 	defer lock.mutex.Unlock()
 
-	result, err := lock.RedisClientInter.Eval(lock.Context, lockScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
+	result, err := lock.Client.Eval(lock.Context, lockScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
 
 	if err != nil {
 		return fmt.Errorf("failed to acquire lock: %w", err)
@@ -41,7 +41,7 @@ func (lock *RedisLock) UnLock() error {
 		lock.autoRenewCancel()
 	}
 
-	result, err := lock.RedisClientInter.Eval(lock.Context, unLockScript, []string{lock.key}, lock.token).Result()
+	result, err := lock.Client.Eval(lock.Context, unLockScript, []string{lock.key}, lock.token).Result()
 
 	if err != nil {
 		return fmt.Errorf("ailed to release lock: %w", err)
@@ -83,7 +83,7 @@ func (lock *RedisLock) Renew() error {
 	lock.mutex.Lock()
 	defer lock.mutex.Unlock()
 
-	res, err := lock.RedisClientInter.Eval(lock.Context, renewScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
+	res, err := lock.Client.Eval(lock.Context, renewScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
 
 	if err != nil {
 		return fmt.Errorf("failed to renew lock: %s", err)
