@@ -21,14 +21,17 @@ go get -u github.com/jefferyjob/go-redislock
 ```
 
 ### Use Demo
+
+The SDK is already compatible with Redis clients, so the `go-redis/redis` package you introduced needs to be greater than or equal to 8.
+
 ```go
 package main
 
 import (
     "context"
     "fmt"
-    "github.com/go-redis/redis/v8"
-	redislock "github.com/jefferyjob/go-redislock"
+    "github.com/go-redis/redis/v8" // v8 or v9
+    redislock "github.com/jefferyjob/go-redislock"
 )
 
 func main() {
@@ -128,5 +131,5 @@ if err != nil {
 - In the process of using locks, it is recommended to carefully design and test critical code blocks to avoid race conditions and deadlock problems.
 
 ## License
-This library is licensed under the MIT. See the LICENSE file for details.
+This library is licensed under the MIT. See the [LICENSE](LICENSE) file for details.
 
