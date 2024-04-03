@@ -27,7 +27,7 @@ package main
 import (
     "context"
     "fmt"
-    "github.com/go-redis/redis/v8"
+    "github.com/go-redis/redis/v8" // 该版本号应大于等于8
 	redislock "github.com/jefferyjob/go-redislock"
 )
 

@@ -3,28 +3,31 @@ package go_redislock
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis/v8"
 	"sync"
 	"time"
+
+	"github.com/go-redis/redis/v8" // Import the Redis client v8
 )
+
+// RedisClientInter 定义Redis客户端的接口
+type RedisClientInter interface {
+	Eval(ctx context.Context, script string, keys []string, args ...interface{}) *redis.Cmd
+}
 
 type RedisLockInter interface {
 	// Lock 加锁
 	Lock() error
-
 	// UnLock 解锁
 	UnLock() error
-
 	// SpinLock 自旋锁
 	SpinLock(timeout time.Duration) error
-
 	// Renew 手动续期
 	Renew() error
 }
 
 type RedisLock struct {
 	context.Context
-	*redis.Client
+	RedisClientInter
 	key             string
 	token           string
 	lockTimeout     time.Duration
@@ -39,11 +42,11 @@ const lockTime = 5 * time.Second
 
 type Option func(lock *RedisLock)
 
-func New(ctx context.Context, redisClient *redis.Client, lockKey string, options ...Option) RedisLockInter {
+func New(ctx context.Context, redisClient RedisClientInter, lockKey string, options ...Option) RedisLockInter {
 	lock := &RedisLock{
-		Context:     ctx,
-		Client:      redisClient,
-		lockTimeout: lockTime,
+		Context:          ctx,
+		RedisClientInter: redisClient,
+		lockTimeout:      lockTime,
 	}
 	for _, f := range options {
 		f(lock)
