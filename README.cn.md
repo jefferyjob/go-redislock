@@ -21,9 +21,6 @@ go get -u github.com/jefferyjob/go-redislock
 ```
 
 ### 使用Demo
-
-该SDK对Redis客户端已做了兼容，所以您引入的 `go-redis/redis` 包需要大于等于8。
-
 ```go
 package main
 
@@ -31,7 +28,7 @@ import (
     "context"
     "fmt"
     "github.com/go-redis/redis/v8"
-    redislock "github.com/jefferyjob/go-redislock"
+	redislock "github.com/jefferyjob/go-redislock"
 )
 
 func main() {
@@ -131,5 +128,5 @@ if err != nil {
 - 在使用锁的过程中，建议对关键代码块进行精心设计和测试，以避免出现竞态条件和死锁问题。
 
 ## 许可证
-本库采用 MIT 进行授权。有关详细信息，请参阅 [LICENSE](LICENSE) 文件。
+本库采用 MIT 进行授权。有关详细信息，请参阅 LICENSE 文件。
 
