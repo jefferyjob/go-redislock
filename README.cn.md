@@ -21,14 +21,17 @@ go get -u github.com/jefferyjob/go-redislock
 ```
 
 ### 使用Demo
+
+The SDK is already compatible with Redis clients, so the 'go redis/Redis' package you introduced needs to be greater than or equal to 8.
+
 ```go
 package main
 
 import (
     "context"
     "fmt"
-    "github.com/go-redis/redis/v8" // 该版本号应大于等于8
-	redislock "github.com/jefferyjob/go-redislock"
+    "github.com/go-redis/redis/v8"
+    redislock "github.com/jefferyjob/go-redislock"
 )
 
 func main() {
