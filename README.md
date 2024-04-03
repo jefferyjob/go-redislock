@@ -131,5 +131,5 @@ if err != nil {
 - In the process of using locks, it is recommended to carefully design and test critical code blocks to avoid race conditions and deadlock problems.
 
 ## License
-This library is licensed under the MIT. See the LICENSE file for details.
+This library is licensed under the MIT. See the [LICENSE](LICENSE) file for details.
 
