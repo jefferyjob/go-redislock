@@ -30,7 +30,7 @@ package main
 import (
     "context"
     "fmt"
-    "github.com/go-redis/redis/v8"
+    "github.com/go-redis/redis/v8" // v8 or v9
     redislock "github.com/jefferyjob/go-redislock"
 )
 
