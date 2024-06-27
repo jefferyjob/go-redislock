@@ -2,6 +2,10 @@ module github.com/jefferyjob/go-redislock
 
 go 1.18
 
+retract (
+    v1.0.0
+)
+
 require (
 	github.com/go-redis/redis/v8 v8.11.5
 	github.com/go-redis/redismock/v8 v8.11.5
