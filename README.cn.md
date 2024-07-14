@@ -28,7 +28,7 @@ import (
     "context"
     "fmt"
     "github.com/go-redis/redis/v8"
-	redislock "github.com/jefferyjob/go-redislock"
+    redislock "github.com/jefferyjob/go-redislock"
 )
 
 func main() {
