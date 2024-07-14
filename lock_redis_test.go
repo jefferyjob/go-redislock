@@ -445,11 +445,41 @@ func getRedisClient() *redis.Client {
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		return nil
 	}
-	return redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
+
+	rdb := redis.NewClient(&redis.Options{
+		Addr:     "127.0.0.1:6379",
 		Password: "",
 		DB:       0,
 	})
+
+	// 尝试执行PING命令
+	// 如果执行PING命令出错，则表明连接失败
+	ctx := context.TODO()
+	_, err := rdb.Ping(ctx).Result()
+	if err != nil {
+		log.Fatalf("Failed to ping Redis: %v", err)
+	}
+
+	return rdb
+}
+
+func TestSevLock(t *testing.T) {
+	redisClient := getRedisClient()
+	if redisClient == nil {
+		log.Println("Github actions skip this test")
+		return
+	}
+
+	ctx := context.TODO()
+	key := "test_key_TestSevLock"
+	lock := New(ctx, redisClient, key)
+	defer lock.UnLock()
+
+	err := lock.Lock()
+	if err != nil {
+		t.Errorf("Lock() returned unexpected error: %v", err)
+		return
+	}
 }
 
 // 测试加锁成功

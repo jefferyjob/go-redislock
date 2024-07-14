@@ -2,10 +2,20 @@ package go_redislock
 
 import (
 	"context"
+	_ "embed"
 	"errors"
 	"fmt"
 	"log"
 	"time"
+)
+
+var (
+	//go:embed lua/lock.lua
+	lockScript string
+	//go:embed lua/unLock.lua
+	unLockScript string
+	//go:embed lua/renew.lua
+	renewScript string
 )
 
 // Lock 加锁
