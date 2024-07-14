@@ -23,9 +23,15 @@ type RedisLockInter interface {
 	Renew() error
 }
 
+type RedisInter interface {
+	//redis.Cmdable
+
+	redis.Scripter
+}
+
 type RedisLock struct {
 	context.Context
-	*redis.Client
+	redis           RedisInter
 	key             string
 	token           string
 	lockTimeout     time.Duration
@@ -37,10 +43,11 @@ type RedisLock struct {
 
 type Option func(lock *RedisLock)
 
-func New(ctx context.Context, redisClient *redis.Client, lockKey string, options ...Option) RedisLockInter {
+func New(ctx context.Context, redisClient RedisInter, lockKey string, options ...Option) RedisLockInter {
+
 	lock := &RedisLock{
 		Context:     ctx,
-		Client:      redisClient,
+		redis:       redisClient,
 		lockTimeout: lockTime,
 	}
 	for _, f := range options {
