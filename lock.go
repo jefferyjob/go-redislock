@@ -2,22 +2,23 @@ package go_redislock
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"github.com/go-redis/redis/v8"
 	"sync"
 	"time"
 )
 
+// 默认锁超时时间
+const lockTime = 5 * time.Second
+
 type RedisLockInter interface {
 	// Lock 加锁
 	Lock() error
-
 	// UnLock 解锁
 	UnLock() error
-
 	// SpinLock 自旋锁
 	SpinLock(timeout time.Duration) error
-
 	// Renew 手动续期
 	Renew() error
 }
@@ -33,9 +34,6 @@ type RedisLock struct {
 	autoRenewCancel context.CancelFunc
 	mutex           sync.Mutex
 }
-
-// 默认锁超时时间
-const lockTime = 5 * time.Second
 
 type Option func(lock *RedisLock)
 
