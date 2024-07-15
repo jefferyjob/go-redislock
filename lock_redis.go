@@ -107,7 +107,7 @@ func (lock *RedisLock) Renew() error {
 
 // 锁自动续期
 func (lock *RedisLock) autoRenew() {
-	ticker := time.NewTicker(lock.lockTimeout / 2)
+	ticker := time.NewTicker(lock.lockTimeout / 3)
 	defer ticker.Stop()
 
 	for {
