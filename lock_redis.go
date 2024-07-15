@@ -3,7 +3,6 @@ package go_redislock
 import (
 	"context"
 	_ "embed"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -26,11 +25,11 @@ func (lock *RedisLock) Lock() error {
 	result, err := lock.redis.Eval(lock.Context, lockScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
 
 	if err != nil {
-		return fmt.Errorf("failed to acquire lock: %w", err)
+		return fmt.Errorf("%v; %v", ErrScriptException, err)
 	}
 
 	if result != "OK" {
-		return errors.New("lock acquisition failed")
+		return ErrScriptFailed
 	}
 
 	if lock.isAutoRenew {
@@ -54,11 +53,11 @@ func (lock *RedisLock) UnLock() error {
 	result, err := lock.redis.Eval(lock.Context, unLockScript, []string{lock.key}, lock.token).Result()
 
 	if err != nil {
-		return fmt.Errorf("ailed to release lock: %w", err)
+		return fmt.Errorf("%v; %v", ErrScriptException, err)
 	}
 
 	if result != "OK" {
-		return errors.New("lock release failed")
+		return ErrScriptFailed
 	}
 
 	return nil
@@ -69,7 +68,7 @@ func (lock *RedisLock) SpinLock(timeout time.Duration) error {
 	exp := time.Now().Add(timeout)
 	for {
 		if time.Now().After(exp) {
-			return errors.New("spin lock timeout")
+			return ErrSpinLockTimeout
 		}
 
 		// 加锁成功直接返回
@@ -81,7 +80,7 @@ func (lock *RedisLock) SpinLock(timeout time.Duration) error {
 		// 如果加锁失败，则休眠一段时间再尝试
 		select {
 		case <-lock.Context.Done():
-			return lock.Context.Err() // 处理取消操作
+			return fmt.Errorf("%v; %v", ErrSpinLockDone, lock.Context.Err()) // 处理取消操作
 		case <-time.After(100 * time.Millisecond):
 			// 继续尝试下一轮加锁
 		}
@@ -96,11 +95,11 @@ func (lock *RedisLock) Renew() error {
 	res, err := lock.redis.Eval(lock.Context, renewScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
 
 	if err != nil {
-		return fmt.Errorf("failed to renew lock: %s", err)
+		return fmt.Errorf("%v; %v", ErrScriptException, err)
 	}
 
 	if res != "OK" {
-		return errors.New("lock renewal failed")
+		return ErrScriptFailed
 	}
 
 	return nil
