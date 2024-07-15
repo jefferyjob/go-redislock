@@ -62,13 +62,6 @@ func New(ctx context.Context, redisClient RedisInter, lockKey string, options ..
 	return lock
 }
 
-// WithKey 设置锁的key
-func WithKey(key string) Option {
-	return func(lock *RedisLock) {
-		lock.key = key
-	}
-}
-
 // WithTimeout 设置锁过期时间
 func WithTimeout(timeout time.Duration) Option {
 	return func(lock *RedisLock) {
