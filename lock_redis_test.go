@@ -251,3 +251,148 @@ func TestRedisLock_SpinLock(t *testing.T) {
 		})
 	}
 }
+
+func TestRedisLock_LockRenew(t *testing.T) {
+	testCases := []struct {
+		name       string
+		mock       func(t *testing.T) *redis.Client
+		before     func(t *testing.T, lock RedisLockInter)
+		after      func(t *testing.T, lock RedisLockInter)
+		inputKey   string
+		inputToken string
+		inputSleep time.Duration // 模拟业务执行时间
+		wantErr    error
+	}{
+		{
+			name: "锁手动续期成功",
+			mock: func(t *testing.T) *redis.Client {
+				db, mock := redismock.NewClientMock()
+				mock.ExpectEval(lockScript, []string{"key"}, "token", lockTime.Seconds()).
+					SetVal("OK")
+				mock.ExpectEval(renewScript, []string{"key"}, "token", lockTime.Seconds()).
+					SetVal("OK")
+				return db
+			},
+			before: func(t *testing.T, lock RedisLockInter) {
+			},
+			after: func(t *testing.T, lock RedisLockInter) {
+				_ = lock.UnLock()
+			},
+			inputKey:   "key",
+			inputToken: "token",
+			inputSleep: time.Second * 10,
+			wantErr:    nil,
+		},
+		{
+			name: "锁手动续期异常",
+			mock: func(t *testing.T) *redis.Client {
+				db, mock := redismock.NewClientMock()
+				mock.ExpectEval(lockScript, []string{"key"}, "token", lockTime.Seconds()).
+					SetVal("OK")
+				mock.ExpectEval(renewScript, []string{"key"}, "token", lockTime.Seconds()).
+					SetErr(ErrException)
+				return db
+			},
+			before: func(t *testing.T, lock RedisLockInter) {
+			},
+			after: func(t *testing.T, lock RedisLockInter) {
+				_ = lock.UnLock()
+			},
+			inputKey:   "key",
+			inputToken: "token",
+			inputSleep: time.Second * 10,
+			wantErr:    ErrException,
+		},
+		{
+			name: "锁手动续期失败",
+			mock: func(t *testing.T) *redis.Client {
+				db, mock := redismock.NewClientMock()
+				mock.ExpectEval(lockScript, []string{"key"}, "token", lockTime.Seconds()).
+					SetVal("OK")
+				mock.ExpectEval(renewScript, []string{"key"}, "token", lockTime.Seconds()).
+					SetVal("nil")
+				return db
+			},
+			before: func(t *testing.T, lock RedisLockInter) {
+			},
+			after: func(t *testing.T, lock RedisLockInter) {
+				_ = lock.UnLock()
+			},
+			inputKey:   "key",
+			inputToken: "token",
+			inputSleep: time.Second * 10,
+			wantErr:    ErrLockRenewFailed,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			lock := New(context.TODO(), tc.mock(t), tc.inputKey, WithToken(tc.inputToken))
+			tc.before(t, lock)
+
+			err := lock.Lock()
+			require.NoError(t, err)
+
+			// 第6秒，手动续期
+			go func() {
+				time.Sleep(time.Second * 6)
+				errRenew := lock.Renew()
+				assert.Equal(t, tc.wantErr, errRenew)
+			}()
+
+			time.Sleep(tc.inputSleep) // 模拟业务执行时间
+
+			tc.after(t, lock)
+		})
+	}
+}
+
+//func TestRedisLock_LockAutoRenew(t *testing.T) {
+//	testCases := []struct {
+//		name       string
+//		mock       func(t *testing.T) *redis.Client
+//		before     func(t *testing.T, lock RedisLockInter)
+//		after      func(t *testing.T, lock RedisLockInter)
+//		inputKey   string
+//		inputToken string
+//		inputSleep time.Duration // 模拟业务执行时间
+//		wantErr    error
+//	}{
+//		{
+//			name: "锁续期成功",
+//			mock: func(t *testing.T) *redis.Client {
+//				db, mock := redismock.NewClientMock()
+//				mock.ExpectEval(lockScript, []string{"key"}, "token", lockTime.Seconds()).
+//					SetVal("OK")
+//				mock.ExpectEval(renewScript, []string{"key"}, "token", lockTime.Seconds()).
+//					SetVal("OK")
+//				return db
+//			},
+//			before: func(t *testing.T, lock RedisLockInter) {
+//
+//			},
+//			after: func(t *testing.T, lock RedisLockInter) {
+//
+//			},
+//			inputKey:   "key",
+//			inputToken: "token",
+//			inputSleep: time.Second * 10,
+//			wantErr:    nil,
+//		},
+//	}
+//
+//	for _, tc := range testCases {
+//		t.Run(tc.name, func(t *testing.T) {
+//			lock := New(context.TODO(), tc.mock(t), tc.inputKey,
+//				WithToken(tc.inputToken),
+//				WithAutoRenew(),
+//			)
+//			err := lock.Lock()
+//
+//			// 模拟业务执行时间
+//			time.Sleep(tc.inputSleep)
+//
+//			assert.Equal(t, tc.wantErr, err)
+//		})
+//	}
+//}

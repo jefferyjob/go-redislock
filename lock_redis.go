@@ -97,7 +97,7 @@ func (lock *RedisLock) Renew() error {
 	}
 
 	if res != "OK" {
-		return ErrScriptFailed
+		return ErrLockRenewFailed
 	}
 
 	return nil
