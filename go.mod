@@ -6,7 +6,7 @@ retract v1.0.0
 
 require (
 	github.com/go-redis/redismock/v9 v9.2.0
-	github.com/redis/go-redis/v9 v9.5.4
+	github.com/redis/go-redis/v9 v9.6.1
 )
 
 require (
