@@ -155,8 +155,8 @@ func TestRedisLock_SpinLock(t *testing.T) {
 	testCases := []struct {
 		name         string
 		mock         func(t *testing.T) *redis.Client
-		before       func(t *testing.T, ctx context.Context, lock RedisLockInter)
-		after        func(t *testing.T, ctx context.Context, lock RedisLockInter)
+		before       func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
+		after        func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
 		inputKey     string
 		inputToken   string
 		inputTimeout time.Duration
@@ -170,10 +170,10 @@ func TestRedisLock_SpinLock(t *testing.T) {
 					SetVal("OK")
 				return db
 			},
-			before: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
 
 			},
-			after: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+			after: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
 
 			},
 			inputTimeout: time.Second * 2,
@@ -189,7 +189,7 @@ func TestRedisLock_SpinLock(t *testing.T) {
 					SetVal("OK")
 				return db
 			},
-			before: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
 				go func() {
 					err := lock.Lock()
 					require.NoError(t, err)
@@ -198,7 +198,7 @@ func TestRedisLock_SpinLock(t *testing.T) {
 				}()
 				time.Sleep(time.Second * 1) // 确保协程加锁成功
 			},
-			after: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+			after: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
 
 			},
 			inputTimeout: time.Second * 3,
@@ -214,7 +214,7 @@ func TestRedisLock_SpinLock(t *testing.T) {
 					SetVal("OK")
 				return db
 			},
-			before: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
 				go func() {
 					err := lock.Lock()
 					require.NoError(t, err)
@@ -223,11 +223,11 @@ func TestRedisLock_SpinLock(t *testing.T) {
 				}()
 				go func() {
 					time.Sleep(time.Second * 2)
-					ctx.Done()
+					cancel()
 				}()
 				time.Sleep(time.Second * 1) // 确保协程加锁成功
 			},
-			after: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+			after: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
 
 			},
 			inputTimeout: time.Second * 10,
@@ -239,15 +239,15 @@ func TestRedisLock_SpinLock(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			ctx := context.TODO()
+			ctx, cancel := context.WithCancel(context.Background())
 			lock := New(ctx, tc.mock(t), tc.inputKey, WithToken(tc.inputToken))
 
-			tc.before(t, ctx, lock)
+			tc.before(t, ctx, cancel, lock)
 
 			err := lock.SpinLock(tc.inputTimeout)
 			assert.Equal(t, tc.wantErr, err)
 
-			tc.after(t, ctx, lock)
+			tc.after(t, ctx, cancel, lock)
 		})
 	}
 }

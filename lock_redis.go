@@ -71,8 +71,7 @@ func (lock *RedisLock) SpinLock(timeout time.Duration) error {
 		}
 
 		// 加锁成功直接返回
-		err := lock.Lock()
-		if err == nil {
+		if err := lock.Lock(); err == nil {
 			return nil
 		}
 
