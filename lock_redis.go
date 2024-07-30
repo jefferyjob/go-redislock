@@ -115,7 +115,7 @@ func (lock *RedisLock) autoRenew() {
 		case <-ticker.C:
 			err := lock.Renew()
 			if err != nil {
-				log.Println("autoRenew failed:", err)
+				log.Printf("Error: autoRenew failed, %v", err)
 				return
 			}
 		}

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-redis/redismock/v9"
 	"github.com/redis/go-redis/v9"
+	"github.com/stretchr/testify/require"
 	"log"
 	"os"
 	"sync"
@@ -447,9 +448,7 @@ func getRedisClient() *redis.Client {
 	}
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     "127.0.0.1:6379",
-		Password: "",
-		DB:       0,
+		Addr: "127.0.0.1:63790",
 	})
 
 	// 尝试执行PING命令
@@ -604,4 +603,19 @@ func TestSevAutoRenewSuccess(t *testing.T) {
 	}()
 
 	wg.Wait()
+}
+
+func TestAutoRenew5(t *testing.T) {
+	redisClient := getRedisClient()
+	if redisClient == nil {
+		log.Println("Github actions skip this test")
+		return
+	}
+	lock := New(context.TODO(), redisClient, "key", WithToken("token"),
+		WithAutoRenew())
+	err := lock.Lock()
+	require.NoError(t, err)
+	defer lock.UnLock()
+
+	time.Sleep(time.Second * 20)
 }

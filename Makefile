@@ -24,6 +24,10 @@ cover: ## 生成测试覆盖率报告
 	#go tool cover -func=coverage.out
 	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
 
+.PHONY:run-redis
+run-redis: ## Docker启动redis服务
+	docker run -itd -p 63790:6379 --name example_redislock redis:5.0.3-alpine
+
 .PHONY:help
 .DEFAULT_GOAL:=help
 help:

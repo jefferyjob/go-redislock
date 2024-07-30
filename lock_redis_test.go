@@ -347,52 +347,183 @@ func TestRedisLock_LockRenew(t *testing.T) {
 	}
 }
 
-//func TestRedisLock_LockAutoRenew(t *testing.T) {
-//	testCases := []struct {
-//		name       string
-//		mock       func(t *testing.T) *redis.Client
-//		before     func(t *testing.T, lock RedisLockInter)
-//		after      func(t *testing.T, lock RedisLockInter)
-//		inputKey   string
-//		inputToken string
-//		inputSleep time.Duration // 模拟业务执行时间
-//		wantErr    error
-//	}{
-//		{
-//			name: "锁续期成功",
-//			mock: func(t *testing.T) *redis.Client {
-//				db, mock := redismock.NewClientMock()
-//				mock.ExpectEval(lockScript, []string{"key"}, "token", lockTime.Seconds()).
-//					SetVal("OK")
-//				mock.ExpectEval(renewScript, []string{"key"}, "token", lockTime.Seconds()).
-//					SetVal("OK")
-//				return db
-//			},
-//			before: func(t *testing.T, lock RedisLockInter) {
-//
-//			},
-//			after: func(t *testing.T, lock RedisLockInter) {
-//
-//			},
-//			inputKey:   "key",
-//			inputToken: "token",
-//			inputSleep: time.Second * 10,
-//			wantErr:    nil,
-//		},
-//	}
-//
-//	for _, tc := range testCases {
-//		t.Run(tc.name, func(t *testing.T) {
-//			lock := New(context.TODO(), tc.mock(t), tc.inputKey,
-//				WithToken(tc.inputToken),
-//				WithAutoRenew(),
-//			)
-//			err := lock.Lock()
-//
-//			// 模拟业务执行时间
-//			time.Sleep(tc.inputSleep)
-//
-//			assert.Equal(t, tc.wantErr, err)
-//		})
-//	}
-//}
+func TestRedisLock_LockAutoRenew(t *testing.T) {
+	testCases := []struct {
+		name       string
+		mock       func(t *testing.T) *redis.Client
+		before     func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
+		after      func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
+		inputKey   string
+		inputToken string
+		inputSleep time.Duration // 模拟业务执行时间
+		wantErr    error
+	}{
+		{
+			name: "锁自动续期成功",
+			mock: func(t *testing.T) *redis.Client {
+				db, mock := redismock.NewClientMock()
+				mock.ExpectEval(lockScript, []string{"key"}, "token", lockTime.Seconds()).
+					SetVal("OK")
+				mock.ExpectEval(renewScript, []string{"key"}, "token", lockTime.Seconds()).
+					SetVal("OK")
+				return db
+			},
+			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
+			},
+			after: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
+				_ = lock.UnLock()
+			},
+			inputKey:   "key",
+			inputToken: "token",
+			inputSleep: time.Second * 10,
+			wantErr:    nil,
+		},
+		{
+			name: "锁自动续期-Ctx取消",
+			mock: func(t *testing.T) *redis.Client {
+				db, mock := redismock.NewClientMock()
+				mock.ExpectEval(lockScript, []string{"key"}, "token", lockTime.Seconds()).
+					SetVal("OK")
+				mock.ExpectEval(renewScript, []string{"key"}, "token", lockTime.Seconds()).
+					SetVal("OK")
+				return db
+			},
+			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
+				go func() {
+					time.Sleep(time.Second * 3)
+					cancel()
+				}()
+			},
+			after: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
+				_ = lock.UnLock()
+			},
+			inputKey:   "key",
+			inputToken: "token",
+			inputSleep: time.Second * 10,
+			wantErr:    nil,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			ctx, cancel := context.WithCancel(context.Background())
+
+			lock := New(ctx, tc.mock(t), tc.inputKey,
+				WithToken(tc.inputToken),
+				WithAutoRenew(),
+			)
+			tc.before(t, ctx, cancel, lock)
+
+			err := lock.Lock()
+			require.NoError(t, err)
+			time.Sleep(tc.inputSleep) // 模拟业务执行时间
+
+			tc.after(t, ctx, cancel, lock)
+		})
+	}
+}
+
+func TestRedisLock_LockTimeout(t *testing.T) {
+	testCases := []struct {
+		name             string
+		before           func(t *testing.T, lock RedisLockInter)
+		after            func(t *testing.T, lock RedisLockInter)
+		mock             func(t *testing.T) *redis.Client
+		inputWithTimeout time.Duration
+		inputKey         string
+		inputToken       string
+		inputSleep       time.Duration
+		wantErr          error
+	}{
+		{
+			name: "加锁成功",
+			mock: func(t *testing.T) *redis.Client {
+				db, mock := redismock.NewClientMock()
+				// 第一次加锁
+				mock.ExpectEval(lockScript, []string{"key"}, "token", (time.Second * 2).Seconds()).
+					SetVal("OK")
+				// 第二次加锁
+				mock.ExpectEval(lockScript, []string{"key"}, "token", (time.Second * 2).Seconds()).
+					SetVal("OK")
+
+				// 第一次解锁
+				mock.ExpectEval(unLockScript, []string{"key"}, "token").
+					SetVal("OK")
+				// 第二次解锁
+				mock.ExpectEval(unLockScript, []string{"key"}, "token").
+					SetVal("OK")
+				return db
+			},
+			before: func(t *testing.T, lock RedisLockInter) {
+				go func() {
+					err := lock.Lock()
+					require.NoError(t, err)
+					defer lock.UnLock()
+					time.Sleep(time.Second * 2)
+				}()
+			},
+			after: func(t *testing.T, lock RedisLockInter) {
+				_ = lock.UnLock()
+			},
+			inputKey:         "key",
+			inputToken:       "token",
+			inputWithTimeout: time.Second * 2,
+			inputSleep:       time.Second * 4,
+			wantErr:          nil,
+		},
+		{
+			name: "加锁失败",
+			mock: func(t *testing.T) *redis.Client {
+				db, mock := redismock.NewClientMock()
+				// 第一次加锁
+				mock.ExpectEval(lockScript, []string{"key"}, "token", (time.Second * 5).Seconds()).
+					SetVal("OK")
+				// 第二次加锁
+				mock.ExpectEval(lockScript, []string{"key"}, "token", (time.Second * 5).Seconds()).
+					SetVal("nil")
+
+				// 第一次解锁
+				mock.ExpectEval(unLockScript, []string{"key"}, "token").
+					SetVal("OK")
+				// 第二次解锁
+				mock.ExpectEval(unLockScript, []string{"key"}, "token").
+					SetVal("OK")
+				return db
+			},
+			before: func(t *testing.T, lock RedisLockInter) {
+				go func() {
+					err := lock.Lock()
+					require.NoError(t, err)
+					defer lock.UnLock()
+					time.Sleep(time.Second * 5)
+				}()
+			},
+			after: func(t *testing.T, lock RedisLockInter) {
+				_ = lock.UnLock()
+			},
+			inputKey:         "key",
+			inputToken:       "token",
+			inputWithTimeout: time.Second * 5,
+			inputSleep:       time.Second * 3,
+			wantErr:          ErrLockFailed,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			lock := New(context.TODO(), tc.mock(t), tc.inputKey,
+				WithToken(tc.inputToken),
+				WithTimeout(tc.inputWithTimeout),
+			)
+
+			tc.before(t, lock)
+
+			time.Sleep(tc.inputSleep)
+
+			err := lock.Lock()
+			assert.Equal(t, tc.wantErr, err)
+
+			tc.after(t, lock)
+		})
+	}
+}
