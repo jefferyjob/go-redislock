@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
 	"sync"
 	"time"
@@ -56,7 +57,7 @@ func New(ctx context.Context, redisClient RedisInter, lockKey string, options ..
 
 	// token 自动生成
 	if lock.token == "" {
-		lock.token = fmt.Sprintf("token_%d", time.Now().UnixNano())
+		lock.token = fmt.Sprintf("lock_token:%s", uuid.New().String())
 	}
 
 	return lock
