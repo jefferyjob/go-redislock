@@ -6,20 +6,16 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
-	"sync"
 	"time"
 )
-
-// 默认锁超时时间
-const lockTime = 5 * time.Second
 
 type RedisLockInter interface {
 	// Lock 加锁
 	Lock() error
-	// UnLock 解锁
-	UnLock() error
 	// SpinLock 自旋锁
 	SpinLock(timeout time.Duration) error
+	// UnLock 解锁
+	UnLock() error
 	// Renew 手动续期
 	Renew() error
 }
@@ -37,13 +33,11 @@ type RedisLock struct {
 	isAutoRenew     bool
 	autoRenewCtx    context.Context
 	autoRenewCancel context.CancelFunc
-	mutex           sync.Mutex
 }
 
 type Option func(lock *RedisLock)
 
 func New(ctx context.Context, redisClient RedisInter, lockKey string, options ...Option) RedisLockInter {
-
 	lock := &RedisLock{
 		Context:     ctx,
 		redis:       redisClient,
@@ -52,14 +46,11 @@ func New(ctx context.Context, redisClient RedisInter, lockKey string, options ..
 	for _, f := range options {
 		f(lock)
 	}
-
 	lock.key = lockKey
-
-	// token 自动生成
+	// automatically generate tokens
 	if lock.token == "" {
 		lock.token = fmt.Sprintf("lock_token:%s", uuid.New().String())
 	}
-
 	return lock
 }
 

@@ -8,17 +8,17 @@ import (
 )
 
 var (
-	//go:embed lua/lock.lua
-	lockScript string
-	//go:embed lua/unLock.lua
-	unLockScript string
-	//go:embed lua/renew.lua
-	renewScript string
+	//go:embed lua/reentrantLock.lua
+	reentrantLockScript string
+	//go:embed lua/reentrantUnLock.lua
+	reentrantUnLockScript string
+	//go:embed lua/reentrantRenew.lua
+	reentrantRenewScript string
 )
 
 // Lock 加锁
 func (lock *RedisLock) Lock() error {
-	result, err := lock.redis.Eval(lock.Context, lockScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
+	result, err := lock.redis.Eval(lock.Context, reentrantLockScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
 
 	if err != nil {
 		return ErrException
@@ -42,12 +42,11 @@ func (lock *RedisLock) UnLock() error {
 		lock.autoRenewCancel()
 	}
 
-	result, err := lock.redis.Eval(lock.Context, unLockScript, []string{lock.key}, lock.token).Result()
+	result, err := lock.redis.Eval(lock.Context, reentrantUnLockScript, []string{lock.key}, lock.token).Result()
 
 	if err != nil {
 		return ErrException
 	}
-
 	if result != "OK" {
 		return ErrUnLockFailed
 	}
@@ -80,12 +79,11 @@ func (lock *RedisLock) SpinLock(timeout time.Duration) error {
 
 // Renew 锁手动续期
 func (lock *RedisLock) Renew() error {
-	res, err := lock.redis.Eval(lock.Context, renewScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
+	res, err := lock.redis.Eval(lock.Context, reentrantRenewScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
 
 	if err != nil {
 		return ErrException
 	}
-
 	if res != "OK" {
 		return ErrLockRenewFailed
 	}
