@@ -2,7 +2,6 @@ package go_redislock
 
 import (
 	"context"
-	_ "embed"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/redis/go-redis/v9"
@@ -12,16 +11,29 @@ import (
 
 // 默认锁超时时间
 const lockTime = 5 * time.Second
+const lockQueueTimeout = 60 * time.Second // 超时机制设置为 60 秒
 
 type RedisLockInter interface {
-	// Lock 加锁
+	// Lock 可重入锁
 	Lock() error
-	// UnLock 解锁
+	SpinLock(timeout time.Duration) error // 自旋锁
 	UnLock() error
-	// SpinLock 自旋锁
-	SpinLock(timeout time.Duration) error
-	// Renew 手动续期
 	Renew() error
+
+	// FairLock 公平锁
+	FairLock() error
+	FairUnLock() error
+	FairRenew() error
+
+	// MultiLock 联锁
+	MultiLock(lockKeys []string) error
+	MultiUnLock(lockKeys []string) error
+	MultiRenew(lockKeys []string) error
+
+	// RedLock 红锁
+	RedLock(lockKeys []string) error
+	RedUnLock(lockKeys []string) error
+	RedRenew(lockKeys []string) error
 }
 
 type RedisInter interface {
@@ -43,7 +55,6 @@ type RedisLock struct {
 type Option func(lock *RedisLock)
 
 func New(ctx context.Context, redisClient RedisInter, lockKey string, options ...Option) RedisLockInter {
-
 	lock := &RedisLock{
 		Context:     ctx,
 		redis:       redisClient,
