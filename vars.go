@@ -1,6 +1,14 @@
 package go_redislock
 
-import "errors"
+import (
+	"errors"
+	"time"
+)
+
+const (
+	// 默认锁超时时间
+	lockTime = 5 * time.Second
+)
 
 var (
 	// ErrLockFailed 加锁失败
