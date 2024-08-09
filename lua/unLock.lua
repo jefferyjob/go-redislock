@@ -3,6 +3,7 @@ local lock_value = ARGV[1]
 local reentrant_key = lock_key .. ':count:' .. lock_value
 local reentrant_count = tonumber(redis.call('GET', reentrant_key) or '0')
 
+--可重入锁解锁
 if reentrant_count > 1 then
     redis.call('DECR', reentrant_key)
     return "OK"
@@ -12,6 +13,7 @@ elseif reentrant_count == 1 then
     return "OK"
 end
 
+--非可重入锁解锁
 if redis.call('GET', lock_key) == lock_value then
     redis.call('DEL', lock_key)
     return "OK"

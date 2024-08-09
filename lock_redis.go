@@ -18,15 +18,11 @@ var (
 
 // Lock 加锁
 func (lock *RedisLock) Lock() error {
-	lock.mutex.Lock()
-	defer lock.mutex.Unlock()
-
 	result, err := lock.redis.Eval(lock.Context, lockScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
 
 	if err != nil {
 		return ErrException
 	}
-
 	if result != "OK" {
 		return ErrLockFailed
 	}
@@ -41,9 +37,6 @@ func (lock *RedisLock) Lock() error {
 
 // UnLock 解锁
 func (lock *RedisLock) UnLock() error {
-	lock.mutex.Lock()
-	defer lock.mutex.Unlock()
-
 	// 如果已经创建了取消函数，则执行取消操作
 	if lock.autoRenewCancel != nil {
 		lock.autoRenewCancel()
@@ -87,9 +80,6 @@ func (lock *RedisLock) SpinLock(timeout time.Duration) error {
 
 // Renew 锁手动续期
 func (lock *RedisLock) Renew() error {
-	lock.mutex.Lock()
-	defer lock.mutex.Unlock()
-
 	res, err := lock.redis.Eval(lock.Context, renewScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
 
 	if err != nil {
