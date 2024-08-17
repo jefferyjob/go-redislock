@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "Open Source: go-redislock"
+    url: "https://github.com/jefferyjob/go-redislock"
+    about: "About High-performance Redis distributed lock service based on Go language. "
+  - name: "Open Source: go-easy-util"
+    url: "https://github.com/jefferyjob/go-easy-utils"
+    about: "Quick toolbox for common data processing developed by Go language。"

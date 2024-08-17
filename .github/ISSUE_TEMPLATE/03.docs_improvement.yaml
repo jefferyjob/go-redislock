@@ -1,0 +1,29 @@
+name: "📚 Documentation Improvement"
+description: "Suggest improvements to the documentation."
+title: "[Docs]: "
+labels: [documentation]
+# assignees: ''
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us improve our documentation by providing suggestions.
+
+  - type: input
+    id: page
+    attributes:
+      label: "Documentation Page"
+      description: "Which page or section are you suggesting improvements for?"
+      placeholder: "URL or section name"
+    validations:
+      required: true
+
+  - type: textarea
+    id: improvement
+    attributes:
+      label: "Suggested Improvement"
+      description: "What improvements would you like to see?"
+      placeholder: "Suggestion details here..."
+    validations:
+      required: true
