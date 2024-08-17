@@ -14,12 +14,14 @@ body:
     id: environment
     attributes:
       label: "Environment"
-      placeholder: "e.g., version:v2.1.0"
+      placeholder: "e.g., Go:1.21, go-redislock version:v2.1.0"
       value: |
-        - version:
+        - Go version: 
+        - go-redislock version:
       description: |
         examples:
-          - **version**: v2.1.0
+          - **Go version**: 1.21
+          - **go-redislock version**: v2.1.0
     validations:
       required: true
 
