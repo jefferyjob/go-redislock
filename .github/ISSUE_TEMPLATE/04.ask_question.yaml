@@ -1,0 +1,29 @@
+name: "🤔 Ask a Question"
+description: "Ask any question about the project."
+title: "[Question]: "
+labels: [question]
+# assignees: ''
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Have a question about the project? We'd love to help! Please provide details below.
+
+  - type: textarea
+    id: question_details
+    attributes:
+      label: "Question Description"
+      description: "Explain your question in detail. Provide any context or background."
+      placeholder: "Details go here..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: code_configuration
+    attributes:
+      label: "Relevant code or configuration"
+      description: "Please provide code snippets or configuration file contents related to the problem."
+      placeholder: "Code or configuration go here..."
+    validations:
+      required: false

@@ -1,0 +1,27 @@
+name: "🚀 Feature Request"
+description: "Make creative suggestions for this package."
+title: "[Feature]: "
+labels: [feature]
+# assignees: ''
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We'd love to hear your idea! Please provide as much detail as possible.
+
+  - type: textarea
+    id: details
+    attributes:
+      label: "Detailed Description"
+      description: "Explain the feature in detail. Why is it needed? How should it work?"
+      placeholder: "Feature details go here..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: "Alternatives"
+      description: "Have you considered any alternatives or workarounds?"
+      placeholder: "Alternative solutions or workarounds"
