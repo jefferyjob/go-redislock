@@ -1,3 +1,6 @@
+- codecov：测试分析 [#32](https://github.com/jefferyjob/go-redislock/pull/32)
+- Go多版本CI测试 [#33](https://github.com/jefferyjob/go-redislock/pull/33)
+
 ## v1.1.2
 - Dependabot 计划间隔每周 [#27](https://github.com/jefferyjob/go-redislock/pull/27)
 - 删除毫无意义的 `sync.Mutex` [#28](https://github.com/jefferyjob/go-redislock/pull/28)

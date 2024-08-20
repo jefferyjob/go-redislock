@@ -1,3 +1,6 @@
+- codecov:Test Analytics [#32](https://github.com/jefferyjob/go-redislock/pull/32)
+- Go multi-version CI test [#33](https://github.com/jefferyjob/go-redislock/pull/33)
+
 ## v1.1.2
 - Dependabot scheduled every week [#27](https://github.com/jefferyjob/go-redislock/pull/27)
 - Delete meaningless `sync.Mutex` [#28](https://github.com/jefferyjob/go-redislock/pull/28)
