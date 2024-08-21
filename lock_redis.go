@@ -42,6 +42,11 @@ func (lock *RedisLock) UnLock() error {
 		lock.autoRenewCancel()
 	}
 
+	// 通知当前已解锁
+	defer func() {
+		lock.unLockChan = make(chan struct{})
+	}()
+
 	result, err := lock.redis.Eval(lock.Context, reentrantUnLockScript, []string{lock.key}, lock.token).Result()
 
 	if err != nil {
@@ -50,29 +55,26 @@ func (lock *RedisLock) UnLock() error {
 	if result != "OK" {
 		return ErrUnLockFailed
 	}
-
 	return nil
 }
 
 // SpinLock 自旋锁
 func (lock *RedisLock) SpinLock(timeout time.Duration) error {
-	exp := time.Now().Add(timeout)
+	timeDeadline := time.After(timeout)
 	for {
-		if time.Now().After(exp) {
-			return ErrSpinLockTimeout
-		}
-
 		// 加锁成功直接返回
 		if err := lock.Lock(); err == nil {
 			return nil
 		}
 
-		// 如果加锁失败，则休眠一段时间再尝试
+		// 如果加锁失败，则等待下次可加锁时间
 		select {
 		case <-lock.Context.Done():
 			return ErrSpinLockDone // 处理取消操作
-		case <-time.After(100 * time.Millisecond):
-			// 继续尝试下一轮加锁
+		case <-lock.unLockChan:
+			// 继续下一次尝试
+		case <-timeDeadline:
+			return ErrSpinLockTimeout
 		}
 	}
 }

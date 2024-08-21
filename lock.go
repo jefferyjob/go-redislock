@@ -33,6 +33,7 @@ type RedisLock struct {
 	isAutoRenew     bool
 	autoRenewCtx    context.Context
 	autoRenewCancel context.CancelFunc
+	unLockChan      <-chan struct{}
 }
 
 type Option func(lock *RedisLock)
