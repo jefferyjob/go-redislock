@@ -18,7 +18,7 @@ var (
 
 // Lock 加锁
 func (lock *RedisLock) Lock() error {
-	result, err := lock.redis.Eval(lock.Context, reentrantLockScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
+	result, err := lock.redis.Eval(lock.Context, reentrantLockScript, []string{lock.key}, lock.token, lock.lockTimeout.Milliseconds()).Result()
 
 	if err != nil {
 		return ErrException
@@ -79,7 +79,7 @@ func (lock *RedisLock) SpinLock(timeout time.Duration) error {
 
 // Renew 锁手动续期
 func (lock *RedisLock) Renew() error {
-	res, err := lock.redis.Eval(lock.Context, reentrantRenewScript, []string{lock.key}, lock.token, lock.lockTimeout.Seconds()).Result()
+	res, err := lock.redis.Eval(lock.Context, reentrantRenewScript, []string{lock.key}, lock.token, lock.lockTimeout.Milliseconds()).Result()
 
 	if err != nil {
 		return ErrException
