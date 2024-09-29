@@ -1,5 +1,9 @@
+## v1.1.3
 - codecov:Test Analytics [#32](https://github.com/jefferyjob/go-redislock/pull/32)
 - Go multi-version CI test [#33](https://github.com/jefferyjob/go-redislock/pull/33)
+- feat:update ttl to ms  [#35](https://github.com/jefferyjob/go-redislock/pull/35)
+- Update the changelog file [#37](https://github.com/jefferyjob/go-redislock/pull/37)
+- fix: Modify errors in the document [#38](https://github.com/jefferyjob/go-redislock/pull/38)
 
 ## v1.1.2
 - Dependabot scheduled every week [#27](https://github.com/jefferyjob/go-redislock/pull/27)

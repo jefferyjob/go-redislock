@@ -1,5 +1,9 @@
+## v1.1.3
 - codecov：测试分析 [#32](https://github.com/jefferyjob/go-redislock/pull/32)
 - Go多版本CI测试 [#33](https://github.com/jefferyjob/go-redislock/pull/33)
+- 更新lua脚本为毫秒单位 [#35](https://github.com/jefferyjob/go-redislock/pull/35)
+- 更新changelog文件 [#37](https://github.com/jefferyjob/go-redislock/pull/37)
+- 修改文档中的错误 [#38](https://github.com/jefferyjob/go-redislock/pull/38)
 
 ## v1.1.2
 - Dependabot 计划间隔每周 [#27](https://github.com/jefferyjob/go-redislock/pull/27)
