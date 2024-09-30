@@ -25,10 +25,10 @@ go get -u github.com/jefferyjob/go-redislock
 package main
 
 import (
-    "context"
-    "fmt"
-    "github.com/go-redis/redis/v8"
-    redislock "github.com/jefferyjob/go-redislock"
+	"context"
+	"fmt"
+	redislock "github.com/jefferyjob/go-redislock"
+	"github.com/redis/go-redis/v9"
 )
 
 func main() {
