@@ -4,6 +4,7 @@
 - 更新lua脚本为毫秒单位 [#35](https://github.com/jefferyjob/go-redislock/pull/35)
 - 更新changelog文件 [#37](https://github.com/jefferyjob/go-redislock/pull/37)
 - 修改文档中的错误 [#38](https://github.com/jefferyjob/go-redislock/pull/38)
+- 修复可重入锁解锁 [#39](https://github.com/jefferyjob/go-redislock/pull/39)
 
 ## v1.1.2
 - Dependabot 计划间隔每周 [#27](https://github.com/jefferyjob/go-redislock/pull/27)

@@ -4,6 +4,7 @@
 - feat:update ttl to ms  [#35](https://github.com/jefferyjob/go-redislock/pull/35)
 - Update the changelog file [#37](https://github.com/jefferyjob/go-redislock/pull/37)
 - fix: Modify errors in the document [#38](https://github.com/jefferyjob/go-redislock/pull/38)
+- Fix reentrant lock unlock [#39](https://github.com/jefferyjob/go-redislock/pull/39)
 
 ## v1.1.2
 - Dependabot scheduled every week [#27](https://github.com/jefferyjob/go-redislock/pull/27)

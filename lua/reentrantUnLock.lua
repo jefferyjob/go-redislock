@@ -9,14 +9,18 @@ if reentrant_count > 1 then
     return "OK"
 elseif reentrant_count == 1 then
     redis.call('DEL', reentrant_key)
-    redis.call('DEL', lock_key)
-    return "OK"
+
+    -- 如果锁的值相等，删除锁
+    if redis.call('GET', lock_key) == lock_value then
+        redis.call('DEL', lock_key)
+        return "OK"
+    end
 end
 
 --非可重入锁解锁
 if redis.call('GET', lock_key) == lock_value then
     redis.call('DEL', lock_key)
     return "OK"
-else
-    return nil
 end
+
+return nil
