@@ -41,8 +41,8 @@ jobs:
             exit 1
           fi
 
-#      - name: Build
-#        run: go build -v ./...
+      - name: Build
+        run: go build -v ./...
 
       # Test Unit
       - name: Test
