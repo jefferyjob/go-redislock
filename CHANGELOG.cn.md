@@ -1,3 +1,6 @@
+## v1.1.4
+- 修复lua脚本支持集群哈希卡槽的错误 [#44](https://github.com/jefferyjob/go-redislock/pull/44)
+
 ## v1.1.3
 - codecov：测试分析 [#32](https://github.com/jefferyjob/go-redislock/pull/32)
 - Go多版本CI测试 [#33](https://github.com/jefferyjob/go-redislock/pull/33)

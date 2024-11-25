@@ -1,3 +1,6 @@
+## v1.1.4
+- Script attempted to access a non local key in a cluster node script [#44](https://github.com/jefferyjob/go-redislock/pull/44)
+
 ## v1.1.3
 - codecov:Test Analytics [#32](https://github.com/jefferyjob/go-redislock/pull/32)
 - Go multi-version CI test [#33](https://github.com/jefferyjob/go-redislock/pull/33)
