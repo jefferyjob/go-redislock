@@ -1,4 +1,4 @@
-local lock_key = KEYS[1]
+local lock_key = '{' .. KEYS[1] .. '}'
 local lock_value = ARGV[1]
 local lock_ttl = tonumber(ARGV[2])
 local reentrant_key = lock_key .. ':count:' .. lock_value
