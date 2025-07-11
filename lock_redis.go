@@ -54,7 +54,7 @@ func (l *RedisLock) UnLock() error {
 	).Int64()
 
 	if err != nil {
-		return ErrException
+		return errors.Join(err, ErrException)
 	}
 	if result != 1 {
 		return ErrUnLockFailed
@@ -97,7 +97,7 @@ func (l *RedisLock) Renew() error {
 	).Int64()
 
 	if err != nil {
-		return ErrException
+		return errors.Join(err, ErrException)
 	}
 
 	if res != 1 {

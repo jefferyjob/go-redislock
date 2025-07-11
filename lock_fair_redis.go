@@ -85,7 +85,7 @@ func (l *RedisLock) FairUnLock(requestId string) error {
 	).Int64()
 
 	if err != nil {
-		return ErrException
+		return errors.Join(err, ErrException)
 	}
 
 	if result != 1 {
