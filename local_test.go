@@ -17,7 +17,6 @@ import (
 // docker run -d -p 6379:6379 --name go_redis_lock redis
 // 注意：该服务在 GITHUB ACTIONS 并不会被测试
 func getRedisClient() *redis.Client {
-	return nil
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		return nil
 	}
