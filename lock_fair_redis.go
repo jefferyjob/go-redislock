@@ -44,10 +44,10 @@ func (l *RedisLock) FairLock(requestId string) error {
 
 // SpinFairLock 自旋公平锁
 func (l *RedisLock) SpinFairLock(requestId string, timeout time.Duration) error {
-	startTime := time.Now()
+	exp := time.Now().Add(timeout)
 	for {
 		// 检查自旋锁是否超时
-		if time.Since(startTime) > timeout {
+		if time.Now().After(exp) {
 			return ErrSpinLockTimeout
 		}
 
