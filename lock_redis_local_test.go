@@ -26,7 +26,7 @@ func TestLockSuccess(t *testing.T) {
 	lock := New(ctx, db, key, WithToken(token))
 
 	// 设置模拟锁获取成功的行为
-	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal("OK")
+	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal(1)
 
 	err := lock.Lock()
 	if err != nil {
@@ -53,7 +53,7 @@ func TestLockFail(t *testing.T) {
 
 	ctx := context.Background()
 	db, mock := redismock.NewClientMock()
-	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal("OK")
+	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal(1)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -111,7 +111,7 @@ func TestUnlockFail(t *testing.T) {
 	lock := New(ctx, db, key, WithToken(token))
 
 	// 加锁逻辑
-	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal("OK")
+	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal(1)
 
 	err := lock.Lock()
 	if err != nil {
@@ -142,8 +142,8 @@ func TestSpinLockSuccess(t *testing.T) {
 	token2 := "some_token2"
 	spinTimeout := time.Duration(5) * time.Second
 
-	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal("OK")
-	mock.ExpectEval(reentrantLockScript, []string{key}, token2, lockTime.Milliseconds()).SetVal("OK")
+	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal(1)
+	mock.ExpectEval(reentrantLockScript, []string{key}, token2, lockTime.Milliseconds()).SetVal(1)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -192,8 +192,8 @@ func TestSpinLockTimeout(t *testing.T) {
 	spinTimeout := time.Duration(5) * time.Second
 	spinTimeout2 := time.Duration(3) * time.Second
 
-	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal("OK")
-	mock.ExpectEval(reentrantLockScript, []string{key}, token2, lockTime.Milliseconds()).SetVal("nil")
+	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal(1)
+	mock.ExpectEval(reentrantLockScript, []string{key}, token2, lockTime.Milliseconds()).SetVal(0)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -238,8 +238,8 @@ func TestRenewSuccess(t *testing.T) {
 	key := "test_key_TestRenewSuccess"
 	token := "some_token"
 
-	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal("OK")
-	mock.ExpectEval(reentrantRenewScript, []string{key}, token, lockTime.Milliseconds()).SetVal("OK")
+	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal(1)
+	mock.ExpectEval(reentrantRenewScript, []string{key}, token, lockTime.Milliseconds()).SetVal(1)
 
 	// 设置模拟锁续期成功的行为
 	mock.ExpectExpire(key, lockTime).SetVal(true)
@@ -283,7 +283,7 @@ func TestRenewFail(t *testing.T) {
 	key := "test_key_TestRenewFail"
 	token := "some_token"
 
-	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal("OK")
+	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal(1)
 	// 设置模拟锁续期成功的行为
 	mock.ExpectExpire(key, lockTime).SetVal(false)
 
@@ -328,7 +328,7 @@ func TestWithTimeout(t *testing.T) {
 	token := "some_token"
 	timeout := time.Duration(10) * time.Second
 
-	mock.ExpectEval(reentrantLockScript, []string{key}, token, timeout.Milliseconds()).SetVal("OK")
+	mock.ExpectEval(reentrantLockScript, []string{key}, token, timeout.Milliseconds()).SetVal(1)
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -375,8 +375,8 @@ func TestAutoRenew(t *testing.T) {
 	key := "test_key_TestAutoRenew"
 	token := "some_token"
 
-	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal("OK")
-	mock.ExpectEval(reentrantRenewScript, []string{key}, token, lockTime.Milliseconds()).SetVal("OK")
+	mock.ExpectEval(reentrantLockScript, []string{key}, token, lockTime.Milliseconds()).SetVal(1)
+	mock.ExpectEval(reentrantRenewScript, []string{key}, token, lockTime.Milliseconds()).SetVal(1)
 	mock.ExpectExpire(key, lockTime).SetVal(true)
 
 	lock := New(ctx, db, key, WithToken(token), WithAutoRenew())
@@ -391,7 +391,7 @@ func TestAutoRenew(t *testing.T) {
 }
 
 // 测试自动续期的 Context 操作取消
-//func TestAutoRenewContextCancellation(t *testing.T) {
+// func TestAutoRenewContextCancellation(t *testing.T) {
 //	// 创建可取消的上下文
 //	ctx, cancel := context.WithCancel(context.Background())
 //
@@ -400,7 +400,7 @@ func TestAutoRenew(t *testing.T) {
 //	token := "some_token"
 //
 //	// 设置模拟锁获取成功的行为
-//	mock.ExpectEval(lockScript, []string{key}, token, lockTime.Milliseconds()).SetVal("OK")
+//	mock.ExpectEval(lockScript, []string{key}, token, lockTime.Milliseconds()).SetVal(1)
 //	// 设置模拟锁续期成功的行为
 //	mock.ExpectExpire(key, lockTime).SetVal(true)
 //
@@ -414,7 +414,7 @@ func TestAutoRenew(t *testing.T) {
 //	go func() {
 //		defer wg.Done()
 //		// 模拟锁续期成功
-//		mock.ExpectEval(renewScript, []string{key}, token, lockTime.Milliseconds()).SetVal("OK")
+//		mock.ExpectEval(renewScript, []string{key}, token, lockTime.Milliseconds()).SetVal(1)
 //		// 等待一段时间，模拟自动续期的过程
 //		time.Sleep(time.Second * 3)
 //		// 取消上下文，模拟上下文的取消
@@ -434,7 +434,7 @@ func TestAutoRenew(t *testing.T) {
 //	time.Sleep(time.Second * 8)
 //
 //	wg.Wait()
-//}
+// }
 
 // Redis服务器测试
 // 下面的代码将借助 redis 服务器进行测试，可以更加方便的测试服务中的问题
