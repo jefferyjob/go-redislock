@@ -3,6 +3,7 @@ package go_redislock
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"log"
 	"time"
 )
@@ -22,10 +23,10 @@ func (l *RedisLock) Lock() error {
 		[]string{l.key},
 		l.token,
 		l.lockTimeout.Milliseconds(),
-	).Int()
+	).Int64()
 
 	if err != nil {
-		return ErrException
+		return errors.Join(err, ErrException)
 	}
 	if result != 1 {
 		return ErrLockFailed
@@ -50,7 +51,7 @@ func (l *RedisLock) UnLock() error {
 		l.Context,
 		reentrantUnLockScript,
 		[]string{l.key}, l.token,
-	).Int()
+	).Int64()
 
 	if err != nil {
 		return ErrException
@@ -93,7 +94,7 @@ func (l *RedisLock) Renew() error {
 		[]string{l.key},
 		l.token,
 		l.lockTimeout.Milliseconds(),
-	).Int()
+	).Int64()
 
 	if err != nil {
 		return ErrException

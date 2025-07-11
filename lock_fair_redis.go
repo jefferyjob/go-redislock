@@ -23,7 +23,7 @@ func (l *RedisLock) FairLock(requestId string) error {
 		requestId,
 		l.lockTimeout.Seconds(),
 		l.requestTimeout.Seconds(),
-	).Int()
+	).Int64()
 
 	if err != nil {
 		return errors.Join(err, ErrException)
@@ -82,7 +82,7 @@ func (l *RedisLock) FairUnLock(requestId string) error {
 		fairUnLockScript,
 		[]string{l.key},
 		requestId,
-	).Int()
+	).Int64()
 
 	if err != nil {
 		return ErrException
