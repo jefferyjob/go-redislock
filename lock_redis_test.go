@@ -344,7 +344,9 @@ func TestRedisLock_LockRenew(t *testing.T) {
 			go func() {
 				time.Sleep(time.Second * 6)
 				errRenew := lock.Renew()
-				assert.Equal(t, tc.wantErr, errRenew)
+				if !errors.Is(errRenew, tc.wantErr) {
+					t.Errorf("expected error %v, got %v", tc.wantErr, err)
+				}
 			}()
 
 			time.Sleep(tc.inputSleep) // 模拟业务执行时间
