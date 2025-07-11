@@ -1,3 +1,6 @@
+## v1.2.0
+- Go version upgraded to 1.24 [#54](https://github.com/jefferyjob/go-redislock/pull/54)
+
 ## v1.1.4
 - Script attempted to access a non local key in a cluster node script [#44](https://github.com/jefferyjob/go-redislock/pull/44)
 
