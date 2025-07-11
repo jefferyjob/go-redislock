@@ -1,3 +1,6 @@
+## v1.2.0
+- go版本升级到1.24  [#54](https://github.com/jefferyjob/go-redislock/pull/54)
+
 ## v1.1.4
 - 修复lua脚本支持集群哈希卡槽的错误 [#44](https://github.com/jefferyjob/go-redislock/pull/44)
 
