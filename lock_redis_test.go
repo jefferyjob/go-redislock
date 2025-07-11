@@ -2,6 +2,7 @@ package go_redislock
 
 import (
 	"context"
+	"errors"
 	"github.com/go-redis/redismock/v9"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
@@ -60,7 +61,9 @@ func TestRedisLock_Lock(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			lock := New(context.TODO(), tc.mock(t), tc.inputKey, WithToken(tc.inputToken))
 			err := lock.Lock()
-			assert.Equal(t, tc.wantErr, err)
+			if !errors.Is(err, tc.wantErr) {
+				t.Errorf("expected error %v, got %v", tc.wantErr, err)
+			}
 		})
 	}
 }
@@ -144,7 +147,9 @@ func TestRedisLock_UnLock(t *testing.T) {
 			tc.before(t, lock)
 
 			err := lock.UnLock()
-			assert.Equal(t, tc.wantErr, err)
+			if !errors.Is(err, tc.wantErr) {
+				t.Errorf("expected error %v, got %v", tc.wantErr, err)
+			}
 
 			tc.after(t, lock)
 		})
@@ -245,7 +250,9 @@ func TestRedisLock_SpinLock(t *testing.T) {
 			tc.before(t, ctx, cancel, lock)
 
 			err := lock.SpinLock(tc.inputTimeout)
-			assert.Equal(t, tc.wantErr, err)
+			if !errors.Is(err, tc.wantErr) {
+				t.Errorf("expected error %v, got %v", tc.wantErr, err)
+			}
 
 			tc.after(t, ctx, cancel, lock)
 		})
