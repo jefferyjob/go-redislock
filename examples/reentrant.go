@@ -1,5 +1,0 @@
-package examples
-
-func TestMain() {
-
-}
