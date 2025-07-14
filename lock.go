@@ -21,6 +21,8 @@ type RedisLockInter interface {
 	FairLock(requestId string) error
 	// SpinFairLock 自旋公平锁
 	SpinFairLock(requestId string, timeout time.Duration) error
+	// FairUnLock 公平锁解锁
+	FairUnLock(requestId string) error
 }
 
 type RedisInter interface {
