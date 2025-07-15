@@ -4,7 +4,6 @@ import (
 	"context"
 	_ "embed"
 	"errors"
-	"log"
 	"time"
 )
 
@@ -52,24 +51,17 @@ func (l *RedisLock) SpinFairLock(requestId string, timeout time.Duration) error 
 			return ErrSpinLockTimeout
 		}
 
-		log.Println("尝试公平锁，当前时间：", time.Now().Format(time.RFC3339), "请求ID：", requestId)
-
 		// 尝试公平锁锁成功
-		err := l.FairLock(requestId)
-		if err == nil {
+		if err := l.FairLock(requestId); err == nil {
 			return nil
 		}
 
-		// 如果是 ErrLockFailed，说明没有抢到锁，继续自旋
-		if errors.Is(err, ErrLockFailed) {
-			select {
-			case <-l.Context.Done(): // 检查上下文是否已取消
-				return ErrSpinLockDone
-			default:
-				time.Sleep(100 * time.Millisecond) // 等待一段时间后重试
-			}
-		} else {
-			return err // 其他错误直接返回
+		// 如果加锁失败，则休眠一段时间再尝试
+		select {
+		case <-l.Context.Done(): // 检查上下文是否已取消
+			return errors.Join(ErrSpinLockDone, context.Canceled)
+		default:
+			time.Sleep(100 * time.Millisecond) // 等待一段时间后重试
 		}
 	}
 }
