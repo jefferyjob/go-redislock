@@ -14,8 +14,8 @@
     输入参数：
     KEYS[1]      - 锁的 key（如 "resource-lock"）
     ARGV[1]      - 请求 ID（一般为客户端 ID + 唯一请求标识，如 UUID）
-    ARGV[2]      - 锁的过期时间（秒，lock_ttl）
-    ARGV[3]      - 请求最大等待时间（秒，request_timeout）
+    ARGV[2]      - 锁的过期时间（毫秒，lock_ttl）
+    ARGV[3]      - 请求最大等待时间（毫秒，request_timeout）
 
     Redis 数据结构说明：
     1. 锁 key:     Redis String，存储当前持有锁的请求 ID
@@ -55,24 +55,26 @@ local request_id = ARGV[1]
 local lock_ttl = tonumber(ARGV[2])
 local request_timeout = tonumber(ARGV[3])
 
--- 清理超时的请求
+-- 当前毫秒数
 local current_time = tonumber(redis.call('TIME')[1])
-redis.call('ZREMRANGEBYSCORE', queue_key, 0, current_time - request_timeout)
+local current_time_ms  = current_time * 1000
+
+-- 清理超时的请求
+redis.call('ZREMRANGEBYSCORE', queue_key, 0, current_time_ms - request_timeout)
 
 -- 加锁（排队）
 -- 将请求 ID 添加到队列中，并设置过期时间
-redis.call('ZADD', queue_key, current_time, request_id)
-redis.call('EXPIRE', queue_key, request_timeout)
+redis.call('ZADD', queue_key, 'NX', current_time_ms, request_id)
+redis.call('PEXPIRE', queue_key, request_timeout)
 
--- 检查当前请求是否为队列的第一个
-local first_request_id = redis.call('ZRANGE', queue_key, 0, 0, 'WITHSCORES')[1]
-
--- 获得锁（只有队首才能成功获得锁）
-if request_id == first_request_id then
-    -- 如果当前请求是第一个，尝试获得锁
-    if redis.call('SET', lock_key, request_id, 'NX', 'EX', lock_ttl) then
-        return 1
-    end
+-- 判断自己是否在队首
+if redis.call('ZRANK', queue_key, request_id) ~= 0 then
+    return 0 -- 还没轮到我
 end
 
-return 0
+-- 只有队首才尝试抢锁
+if redis.call('SET', lock_key, request_id, 'NX', 'PX', lock_ttl) then
+    return 1
+end
+
+return 0 -- 锁被别人占着

@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"errors"
+	"log"
 	"time"
 )
 
@@ -21,8 +22,8 @@ func (l *RedisLock) FairLock(requestId string) error {
 	result, err := l.redis.Eval(l.Context, fairLockScript,
 		[]string{l.key},
 		requestId,
-		l.lockTimeout.Seconds(),
-		l.requestTimeout.Seconds(),
+		l.lockTimeout.Milliseconds(),
+		l.requestTimeout.Milliseconds(),
 	).Int64()
 
 	if err != nil {
@@ -50,6 +51,8 @@ func (l *RedisLock) SpinFairLock(requestId string, timeout time.Duration) error 
 		if time.Now().After(exp) {
 			return ErrSpinLockTimeout
 		}
+
+		log.Println("尝试公平锁，当前时间：", time.Now().Format(time.RFC3339), "请求ID：", requestId)
 
 		// 尝试公平锁锁成功
 		err := l.FairLock(requestId)

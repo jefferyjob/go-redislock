@@ -48,9 +48,10 @@ func New(ctx context.Context, redisClient RedisInter, lockKey string, options ..
 	lock := &RedisLock{
 		Context:        ctx,
 		redis:          redisClient,
-		lockTimeout:    lockTime,           // 锁默认超时时间
-		requestTimeout: lockRequestTimeout, // 公平锁在队列中的最大等待时间
+		lockTimeout:    lockTime, // 锁默认超时时间
+		requestTimeout: lockTime, // 公平锁在队列中的最大等待时间
 	}
+
 	for _, f := range options {
 		f(lock)
 	}
