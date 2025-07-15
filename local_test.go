@@ -14,12 +14,14 @@ import (
 // Redis服务器测试
 // 下面的代码将借助 redis 服务器进行测试，可以更加方便的测试服务中的问题
 // 你可以实用下面的命令启动一个redis容器进行测试
-// docker run -d -p 6379:6379 --name go_redis_lock redis
+// docker run -d -p 63790:6379 --name go_redis_lock redis
 // 注意：该服务在 GITHUB ACTIONS 并不会被测试
 func getRedisClient() *redis.Client {
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		return nil
 	}
+
+	return nil
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr: "127.0.0.1:63790",

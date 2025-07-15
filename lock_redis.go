@@ -4,7 +4,6 @@ import (
 	"context"
 	_ "embed"
 	"errors"
-	"log"
 	"time"
 )
 
@@ -119,7 +118,7 @@ func (l *RedisLock) autoRenew() {
 		case <-ticker.C:
 			err := l.Renew()
 			if err != nil {
-				log.Printf("Error: autoRenew failed, %v", err)
+				// log.Printf("Error: autoRenew failed, %v", err)
 				return
 			}
 		}

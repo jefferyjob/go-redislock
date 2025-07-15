@@ -3,6 +3,7 @@ package go_redislock
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/go-redis/redismock/v9"
 	"github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
@@ -345,6 +346,7 @@ func TestRedisLock_LockRenew(t *testing.T) {
 				time.Sleep(time.Second * 6)
 				errRenew := lock.Renew()
 				if !errors.Is(errRenew, tc.wantErr) {
+					fmt.Printf("测试用：%s, 续期错误：%v, 想要的错误：%v \n", tc.name, errRenew, tc.wantErr)
 					t.Errorf("expected error %v, got %v", tc.wantErr, err)
 				}
 			}()
