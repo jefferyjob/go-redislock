@@ -21,8 +21,6 @@ func getRedisClient() *redis.Client {
 		return nil
 	}
 
-	return nil
-
 	rdb := redis.NewClient(&redis.Options{
 		Addr: "127.0.0.1:63790",
 	})
