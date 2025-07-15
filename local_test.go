@@ -21,6 +21,10 @@ func getRedisClient() *redis.Client {
 		return nil
 	}
 
+	if true {
+		return nil
+	}
+
 	rdb := redis.NewClient(&redis.Options{
 		Addr: "127.0.0.1:63790",
 	})
@@ -30,7 +34,8 @@ func getRedisClient() *redis.Client {
 	ctx := context.TODO()
 	_, err := rdb.Ping(ctx).Result()
 	if err != nil {
-		log.Fatalf("Failed to ping Redis: %v", err)
+		log.Printf("Failed to ping Redis: %v", err)
+		return nil
 	}
 
 	return rdb

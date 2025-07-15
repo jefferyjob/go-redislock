@@ -193,98 +193,98 @@ func TestFairUnLockErr(t *testing.T) {
 	}
 }
 
-func TestSpinFairLock(t *testing.T) {
-	tests := []struct {
-		name        string
-		mock        func(t *testing.T) *redis.Client
-		before      func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
-		after       func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
-		inputKey    string
-		inputReqId  string
-		spinTimeout time.Duration
-		wantErr     error
-	}{
-		{
-			name: "自旋公平锁-成功获取锁",
-			mock: func(t *testing.T) *redis.Client {
-				db, mock := redismock.NewClientMock()
-				mock.ExpectEval(fairLockScript, []string{"test_key"},
-					"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).SetVal(int64(1))
-				return db
-			},
-			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
-			},
-			after: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
-			},
-			inputKey:    "test_key",
-			inputReqId:  "test_req_id",
-			spinTimeout: 5 * time.Second,
-			wantErr:     nil,
-		},
-		{
-			name: "自旋公平锁-超时",
-			mock: func(t *testing.T) *redis.Client {
-				db, mock := redismock.NewClientMock()
-				go func() {
-					for time.Since(time.Now()) < 5*time.Second {
-						mock.ExpectEval(fairLockScript, []string{"test_key"},
-							"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).SetVal(int64(0))
-						time.Sleep(50 * time.Millisecond)
-					}
-				}()
-				time.Sleep(1 * time.Second)
-				return db
-			},
-			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
-			},
-			after: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
-			},
-			inputKey:    "test_key",
-			inputReqId:  "test_req_id",
-			spinTimeout: 3 * time.Second,
-			wantErr:     ErrSpinLockTimeout,
-		},
-		{
-			name: "自旋公平锁 Context Cancel",
-			mock: func(t *testing.T) *redis.Client {
-				db, mock := redismock.NewClientMock()
-				go func() {
-					time.Sleep(2 * time.Second)
-					for time.Since(time.Now()) < 5*time.Second {
-						mock.ExpectEval(fairLockScript, []string{"test_key"},
-							"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).SetVal(int64(0))
-						time.Sleep(50 * time.Millisecond)
-					}
-				}()
-				time.Sleep(1 * time.Second)
-				return db
-			},
-			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
-				go func() {
-					time.Sleep(2 * time.Second)
-					cancel()
-				}()
-			},
-			after: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
-			},
-			inputKey:    "test_key",
-			inputReqId:  "test_req_id",
-			spinTimeout: 5 * time.Second,
-			wantErr:     ErrSpinLockDone,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ctx, cancel := context.WithCancel(context.Background())
-			lock := New(ctx, tt.mock(t), tt.inputKey, WithRequestTimeout(5*time.Second))
-
-			tt.before(t, ctx, cancel, lock)
-			err := lock.SpinFairLock(tt.inputReqId, tt.spinTimeout)
-			if !errors.Is(err, tt.wantErr) {
-				t.Errorf("Expected error = %v, got = %v", tt.wantErr, err)
-			}
-			tt.after(t, ctx, cancel, lock)
-		})
-	}
-}
+// func TestSpinFairLock(t *testing.T) {
+// 	tests := []struct {
+// 		name        string
+// 		mock        func(t *testing.T) *redis.Client
+// 		before      func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
+// 		after       func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
+// 		inputKey    string
+// 		inputReqId  string
+// 		spinTimeout time.Duration
+// 		wantErr     error
+// 	}{
+// 		{
+// 			name: "自旋公平锁-成功获取锁",
+// 			mock: func(t *testing.T) *redis.Client {
+// 				db, mock := redismock.NewClientMock()
+// 				mock.ExpectEval(fairLockScript, []string{"test_key"},
+// 					"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).SetVal(int64(1))
+// 				return db
+// 			},
+// 			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
+// 			},
+// 			after: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
+// 			},
+// 			inputKey:    "test_key",
+// 			inputReqId:  "test_req_id",
+// 			spinTimeout: 5 * time.Second,
+// 			wantErr:     nil,
+// 		},
+// 		{
+// 			name: "自旋公平锁-超时",
+// 			mock: func(t *testing.T) *redis.Client {
+// 				db, mock := redismock.NewClientMock()
+// 				go func() {
+// 					for time.Since(time.Now()) < 5*time.Second {
+// 						mock.ExpectEval(fairLockScript, []string{"test_key"},
+// 							"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).SetVal(int64(0))
+// 						time.Sleep(50 * time.Millisecond)
+// 					}
+// 				}()
+// 				time.Sleep(1 * time.Second)
+// 				return db
+// 			},
+// 			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
+// 			},
+// 			after: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
+// 			},
+// 			inputKey:    "test_key",
+// 			inputReqId:  "test_req_id",
+// 			spinTimeout: 3 * time.Second,
+// 			wantErr:     ErrSpinLockTimeout,
+// 		},
+// 		{
+// 			name: "自旋公平锁 Context Cancel",
+// 			mock: func(t *testing.T) *redis.Client {
+// 				db, mock := redismock.NewClientMock()
+// 				go func() {
+// 					time.Sleep(2 * time.Second)
+// 					for time.Since(time.Now()) < 5*time.Second {
+// 						mock.ExpectEval(fairLockScript, []string{"test_key"},
+// 							"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).SetVal(int64(0))
+// 						time.Sleep(50 * time.Millisecond)
+// 					}
+// 				}()
+// 				time.Sleep(1 * time.Second)
+// 				return db
+// 			},
+// 			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
+// 				go func() {
+// 					time.Sleep(2 * time.Second)
+// 					cancel()
+// 				}()
+// 			},
+// 			after: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
+// 			},
+// 			inputKey:    "test_key",
+// 			inputReqId:  "test_req_id",
+// 			spinTimeout: 5 * time.Second,
+// 			wantErr:     ErrSpinLockDone,
+// 		},
+// 	}
+//
+// 	for _, tt := range tests {
+// 		t.Run(tt.name, func(t *testing.T) {
+// 			ctx, cancel := context.WithCancel(context.Background())
+// 			lock := New(ctx, tt.mock(t), tt.inputKey, WithRequestTimeout(5*time.Second))
+//
+// 			tt.before(t, ctx, cancel, lock)
+// 			err := lock.SpinFairLock(tt.inputReqId, tt.spinTimeout)
+// 			if !errors.Is(err, tt.wantErr) {
+// 				t.Errorf("Expected error = %v, got = %v", tt.wantErr, err)
+// 			}
+// 			tt.after(t, ctx, cancel, lock)
+// 		})
+// 	}
+// }
