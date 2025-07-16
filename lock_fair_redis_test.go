@@ -69,6 +69,57 @@ func TestFairLock(t *testing.T) {
 	}
 }
 
+func TestFairLockFairRenew(t *testing.T) {
+	tests := []struct {
+		name         string
+		mock         func(t *testing.T) *redis.Client
+		inputKey     string
+		inputReqId   string
+		sleepTime    time.Duration // 模拟业务执行时间
+		wantErr      error
+		wantRenewErr error
+	}{
+		{
+			name: "续期失败",
+			mock: func(t *testing.T) *redis.Client {
+				db, mock := redismock.NewClientMock()
+				mock.ExpectEval(fairLockScript, []string{"key"},
+					"req_id", lockTime.Milliseconds(), lockTime.Milliseconds()).
+					SetVal(int64(1))
+				mock.ExpectEval(fairRenewScript, []string{"key"},
+					"req_id", lockTime.Milliseconds()).
+					SetVal(int64(0))
+				return db
+			},
+			inputKey:     "key",
+			inputReqId:   "req_id",
+			sleepTime:    2 * time.Second,
+			wantErr:      nil,
+			wantRenewErr: ErrLockRenewFailed, // 续期失败
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lock := New(context.TODO(), tt.mock(t), tt.inputKey)
+			err := lock.FairLock(tt.inputReqId)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("Expected error = %v, wantErr %v", err, tt.wantErr)
+			}
+
+			// 模拟业务执行时间
+			if tt.sleepTime != time.Duration(0) {
+				time.Sleep(tt.sleepTime)
+			}
+
+			err = lock.FairRenew(tt.inputReqId)
+			if !errors.Is(err, tt.wantRenewErr) {
+				t.Errorf("Expected error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func TestFairUnLock(t *testing.T) {
 	tests := []struct {
 		name          string

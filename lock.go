@@ -23,6 +23,8 @@ type RedisLockInter interface {
 	SpinFairLock(requestId string, timeout time.Duration) error
 	// FairUnLock 公平锁解锁
 	FairUnLock(requestId string) error
+	// FairRenew 公平锁续期
+	FairRenew(requestId string) error
 }
 
 type RedisInter interface {
