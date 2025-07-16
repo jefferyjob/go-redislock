@@ -17,6 +17,15 @@ type RedisLockInter interface {
 	UnLock() error
 	// Renew 手动续期
 	Renew() error
+
+	// FairLock 公平锁加锁
+	FairLock(requestId string) error
+	// SpinFairLock 自旋公平锁
+	SpinFairLock(requestId string, timeout time.Duration) error
+	// FairUnLock 公平锁解锁
+	FairUnLock(requestId string) error
+	// FairRenew 公平锁续期
+	FairRenew(requestId string) error
 }
 
 type RedisInter interface {
@@ -25,11 +34,13 @@ type RedisInter interface {
 
 type RedisLock struct {
 	context.Context
-	redis           RedisInter
-	key             string
-	token           string
-	lockTimeout     time.Duration
-	isAutoRenew     bool
+	redis       RedisInter
+	key         string
+	token       string
+	lockTimeout time.Duration
+	isAutoRenew bool
+	// 公平锁在队列中的最大等待时间
+	requestTimeout  time.Duration
 	autoRenewCtx    context.Context
 	autoRenewCancel context.CancelFunc
 }
@@ -38,18 +49,22 @@ type Option func(lock *RedisLock)
 
 func New(ctx context.Context, redisClient RedisInter, lockKey string, options ...Option) RedisLockInter {
 	lock := &RedisLock{
-		Context:     ctx,
-		redis:       redisClient,
-		lockTimeout: lockTime,
+		Context:        ctx,
+		redis:          redisClient,
+		lockTimeout:    lockTime, // 锁默认超时时间
+		requestTimeout: lockTime, // 公平锁在队列中的最大等待时间
 	}
+
 	for _, f := range options {
 		f(lock)
 	}
 	lock.key = lockKey
-	// automatically generate tokens
+
+	// 如果未设置锁的Token，则生成一个唯一的Token
 	if lock.token == "" {
 		lock.token = fmt.Sprintf("lock_token:%s", uuid.New().String())
 	}
+
 	return lock
 }
 
@@ -71,5 +86,12 @@ func WithAutoRenew() Option {
 func WithToken(token string) Option {
 	return func(lock *RedisLock) {
 		lock.token = token
+	}
+}
+
+// WithRequestTimeout 设置公平锁在队列中的最大等待时间
+func WithRequestTimeout(timeout time.Duration) Option {
+	return func(lock *RedisLock) {
+		lock.requestTimeout = timeout
 	}
 }

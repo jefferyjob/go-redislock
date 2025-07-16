@@ -3,6 +3,7 @@ package go_redislock
 import (
 	"context"
 	_ "embed"
+	"errors"
 	"log"
 	"time"
 )
@@ -16,38 +17,46 @@ var (
 	reentrantRenewScript string
 )
 
-// Lock 加锁
-func (lock *RedisLock) Lock() error {
-	result, err := lock.redis.Eval(lock.Context, reentrantLockScript, []string{lock.key}, lock.token, lock.lockTimeout.Milliseconds()).Result()
+// Lock 可重入锁加锁
+func (l *RedisLock) Lock() error {
+	result, err := l.redis.Eval(l.Context, reentrantLockScript,
+		[]string{l.key},
+		l.token,
+		l.lockTimeout.Milliseconds(),
+	).Int64()
 
 	if err != nil {
-		return ErrException
+		return errors.Join(err, ErrException)
 	}
-	if result != "OK" {
+	if result != 1 {
 		return ErrLockFailed
 	}
 
-	if lock.isAutoRenew {
-		lock.autoRenewCtx, lock.autoRenewCancel = context.WithCancel(lock.Context)
-		go lock.autoRenew()
+	if l.isAutoRenew {
+		l.autoRenewCtx, l.autoRenewCancel = context.WithCancel(l.Context)
+		go l.autoRenew()
 	}
 
 	return nil
 }
 
 // UnLock 解锁
-func (lock *RedisLock) UnLock() error {
+func (l *RedisLock) UnLock() error {
 	// 如果已经创建了取消函数，则执行取消操作
-	if lock.autoRenewCancel != nil {
-		lock.autoRenewCancel()
+	if l.autoRenewCancel != nil {
+		l.autoRenewCancel()
 	}
 
-	result, err := lock.redis.Eval(lock.Context, reentrantUnLockScript, []string{lock.key}, lock.token).Result()
+	result, err := l.redis.Eval(
+		l.Context,
+		reentrantUnLockScript,
+		[]string{l.key}, l.token,
+	).Int64()
 
 	if err != nil {
-		return ErrException
+		return errors.Join(err, ErrException)
 	}
-	if result != "OK" {
+	if result != 1 {
 		return ErrUnLockFailed
 	}
 
@@ -55,7 +64,7 @@ func (lock *RedisLock) UnLock() error {
 }
 
 // SpinLock 自旋锁
-func (lock *RedisLock) SpinLock(timeout time.Duration) error {
+func (l *RedisLock) SpinLock(timeout time.Duration) error {
 	exp := time.Now().Add(timeout)
 	for {
 		if time.Now().After(exp) {
@@ -63,14 +72,14 @@ func (lock *RedisLock) SpinLock(timeout time.Duration) error {
 		}
 
 		// 加锁成功直接返回
-		if err := lock.Lock(); err == nil {
+		if err := l.Lock(); err == nil {
 			return nil
 		}
 
 		// 如果加锁失败，则休眠一段时间再尝试
 		select {
-		case <-lock.Context.Done():
-			return ErrSpinLockDone // 处理取消操作
+		case <-l.Context.Done():
+			return errors.Join(ErrSpinLockDone, context.Canceled) // 处理取消操作
 		case <-time.After(100 * time.Millisecond):
 			// 继续尝试下一轮加锁
 		}
@@ -78,13 +87,20 @@ func (lock *RedisLock) SpinLock(timeout time.Duration) error {
 }
 
 // Renew 锁手动续期
-func (lock *RedisLock) Renew() error {
-	res, err := lock.redis.Eval(lock.Context, reentrantRenewScript, []string{lock.key}, lock.token, lock.lockTimeout.Milliseconds()).Result()
+func (l *RedisLock) Renew() error {
+	res, err := l.redis.Eval(
+		l.Context,
+		reentrantRenewScript,
+		[]string{l.key},
+		l.token,
+		l.lockTimeout.Milliseconds(),
+	).Int64()
 
 	if err != nil {
-		return ErrException
+		return errors.Join(err, ErrException)
 	}
-	if res != "OK" {
+
+	if res != 1 {
 		return ErrLockRenewFailed
 	}
 
@@ -92,16 +108,16 @@ func (lock *RedisLock) Renew() error {
 }
 
 // 锁自动续期
-func (lock *RedisLock) autoRenew() {
-	ticker := time.NewTicker(lock.lockTimeout / 3)
+func (l *RedisLock) autoRenew() {
+	ticker := time.NewTicker(l.lockTimeout / 3)
 	defer ticker.Stop()
 
 	for {
 		select {
-		case <-lock.autoRenewCtx.Done():
+		case <-l.autoRenewCtx.Done():
 			return
 		case <-ticker.C:
-			err := lock.Renew()
+			err := l.Renew()
 			if err != nil {
 				log.Printf("Error: autoRenew failed, %v", err)
 				return

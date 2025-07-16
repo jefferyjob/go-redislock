@@ -60,65 +60,37 @@ func main() {
 }
 ```
 
-## 高级用法
+### 配置选项
+| **选项函数**                        | **说明**           | **默认值** |
+| ----------------------------------- |------------------|---------|
+| WithTimeout(d time.Duration)        | 锁超时时间（TTL）       | 5s      |
+| WithAutoRenew()                     | 是否自动续期           | false   |
+| WithToken(token string)             | 可重入锁 Token（唯一标识） | 随机 UUID |
+| WithRequestTimeout(d time.Duration) | 公平锁队列最大等待时间      | 同 TTL   |
 
-### 自定义Token
-您可以通过使用 `WithToken` 选项在自定义锁的token功能：
+### API 速查
 ```go
-lock := redislock.New(ctx, redisClient, 
-	redislock.WithToken("your token")
-)
-```
+type RedisLockInter interface {
+	// Lock 加锁
+	Lock() error
+	// SpinLock 自旋锁
+	SpinLock(timeout time.Duration) error
+	// UnLock 解锁
+	UnLock() error
+	// Renew 手动续期
+	Renew() error
 
-### 自定义锁超时时间
-您可以通过使用 `WithTimeout` 选项在自定义锁的超时时间功能：
-```go
-lock := redislock.New(ctx, redisClient, 
-	redislock.WithTimeout(time.Duration(10) * time.Second)
-)
-```
-
-### 自动续期
-您可以通过使用 `WithAutoRenew` 选项在获取锁时启用自动续约功能：
-```go
-lock := redislock.New(ctx, redisClient,
-	redislock.WithAutoRenew()
-)
-```
-
-当使用自动续约时，锁会在获取后自动定期续约，以防止锁过期。要手动续约锁，可以调用 `Renew` 方法。
-
-### 自旋锁
-自旋锁是一种尝试在锁可用之前反复获取锁的方式，可以使用 `SpinLock` 方法来实现自旋锁：
-```go
-err := lock.SpinLock(time.Duration(5) * time.Second) // 尝试获取锁，最多等待5秒
-if err != nil {
-    fmt.Println("自旋锁超时：", err)
-    return
-}
-defer lock.UnLock() // 解锁
-
-// 在锁定期间执行任务
-// ...
-```
-
-### 锁释放
-如果您希望手动释放锁而不等待锁超时，您可以使用 `UnLock` 方法：
-```go
-err := lock.Lock()
-if err != nil {
-    fmt.Println("锁获取失败：", err)
-    return
-}
-
-// 执行任务
-
-err = lock.UnLock() // 手动释放锁
-if err != nil {
-    fmt.Println("锁释放失败：", err)
-    return
+	// FairLock 公平锁加锁
+	FairLock(requestId string) error
+	// SpinFairLock 自旋公平锁
+	SpinFairLock(requestId string, timeout time.Duration) error
+	// FairUnLock 公平锁解锁
+	FairUnLock(requestId string) error
+	// FairRenew 公平锁续期
+	FairRenew(requestId string) error
 }
 ```
+
 
 ## 注意事项
 - 请确保您的 Redis 服务器设置正确，并且能够正常连接和运行。
