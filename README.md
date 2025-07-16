@@ -60,65 +60,37 @@ func main() {
 }
 ```
 
-## Advanced usage
+### Configuration options
+| **Option function** | **Description** | **Default value** |
+| ----------------------------------- |------------------|---------|
+| WithTimeout(d time.Duration) | Lock timeout (TTL) | 5s |
+| WithAutoRenew() | Whether to automatically renew | false |
+| WithToken(token string) | Reentrant lock Token (unique identifier) | Random UUID |
+| WithRequestTimeout(d time.Duration) | Maximum waiting time for fair lock queue | Same as TTL |
 
-### Custom Token
-You can customize the lock's token functionality by using the `WithToken` option:
+### API Quick Check
 ```go
-lock := redislock. New(ctx, redisClient,
-    redislock. WithToken("your token")
-)
-```
-
-### Custom lock timeout
-You can customize the lock's timeout function by using the `WithTimeout` option:
-```go
-lock := redislock. New(ctx, redisClient,
-    redislock.WithTimeout(time.Duration(10) * time.Second)
-)
-```
-
-### Automatic renewal
-You can enable automatic renewal when acquiring a lock by using the `WithAutoRenew` option:
-```go
-lock := redislock.New(ctx, redisClient,
-	redislock.WithAutoRenew(true)
-)
-```
-
-When using auto-renew, locks are automatically renewed periodically after acquisition to prevent locks from expiring. To manually renew a lock, the `Renew` method can be called.
-
-### Spin lock
-A spinlock is a way to repeatedly acquire a lock until it becomes available. You can use the `SpinLock` method to implement a spinlock:
-```go
-err := lock.SpinLock(time.Duration(5) * time.Second) // Try to acquire the lock, wait up to 5 seconds
-if err != nil {
-    fmt.Println("spinlock timeout：", err)
-    return
-}
-defer lock.UnLock() // unlock
-
-// Perform tasks during lockdown
-// ...
-```
-
-### Lock release
-If you wish to release the lock manually without waiting for the lock to timeout, you can use the `UnLock` method:
-```go
-err := lock.Lock()
-if err != nil {
-    fmt.Println("lock acquisition failed：", err)
-    return
-}
-
-// perform tasks
-
-err = lock.UnLock() // Release the lock manually
-if err != nil {
-    fmt.Println("lock release failed：", err)
-    return
+type RedisLockInter interface {
+    // Lock Locking
+    Lock() error
+    // SpinLock Spinlock
+    SpinLock(timeout time.Duration) error
+    // UnLock Unlocking
+    UnLock() error
+    // Renew Manual renewal
+    Renew() error
+    
+    // FairLock Fair lock locking
+    FairLock(requestId string) error
+    // SpinFairLock Spin Fair Lock
+    SpinFairLock(requestId string, timeout time.Duration) error
+    // FairUnLock Fair Lock Unlock
+    FairUnLock(requestId string) error
+    // FairRenew Fair Lock Renew
+    FairRenew(requestId string) error
 }
 ```
+
 
 ## Precautions
 - Please make sure your Redis server is set up correctly, connected and running properly.

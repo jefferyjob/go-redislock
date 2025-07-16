@@ -9,7 +9,7 @@ import (
 )
 
 type RedisLockInter interface {
-	// Lock 可重入锁加锁
+	// Lock 加锁
 	Lock() error
 	// SpinLock 自旋锁
 	SpinLock(timeout time.Duration) error
@@ -17,6 +17,7 @@ type RedisLockInter interface {
 	UnLock() error
 	// Renew 手动续期
 	Renew() error
+
 	// FairLock 公平锁加锁
 	FairLock(requestId string) error
 	// SpinFairLock 自旋公平锁
