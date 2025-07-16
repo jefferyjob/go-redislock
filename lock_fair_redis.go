@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"errors"
+	"log"
 	"time"
 )
 
@@ -12,6 +13,8 @@ var (
 	fairLockScript string
 	//go:embed lua/fairUnlock.lua
 	fairUnLockScript string
+	//go:embed lua/fairRenew.lua
+	fairRenewScript string
 )
 
 // FairLock 公平锁尝试加锁
@@ -36,7 +39,7 @@ func (l *RedisLock) FairLock(requestId string) error {
 
 	if l.isAutoRenew {
 		l.autoRenewCtx, l.autoRenewCancel = context.WithCancel(l.Context)
-		go l.autoRenew()
+		go l.autoFairRenew(requestId)
 	}
 
 	return nil
@@ -60,8 +63,8 @@ func (l *RedisLock) SpinFairLock(requestId string, timeout time.Duration) error 
 		select {
 		case <-l.Context.Done(): // 检查上下文是否已取消
 			return errors.Join(ErrSpinLockDone, context.Canceled)
-		default:
-			time.Sleep(100 * time.Millisecond) // 等待一段时间后重试
+		case <-time.After(100 * time.Millisecond):
+			// 继续尝试下一轮加锁
 		}
 	}
 }
@@ -88,4 +91,44 @@ func (l *RedisLock) FairUnLock(requestId string) error {
 	}
 
 	return nil
+}
+
+// FairRenew 公平锁手动续期
+func (l *RedisLock) FairRenew(requestId string) error {
+	res, err := l.redis.Eval(
+		l.Context,
+		fairRenewScript,
+		[]string{l.key},
+		requestId,
+		l.lockTimeout.Milliseconds(),
+	).Int64()
+
+	if err != nil {
+		return errors.Join(err, ErrException)
+	}
+
+	if res != 1 {
+		return ErrLockRenewFailed
+	}
+
+	return nil
+}
+
+// 锁自动续期
+func (l *RedisLock) autoFairRenew(requestId string) {
+	ticker := time.NewTicker(l.lockTimeout / 3)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-l.autoRenewCtx.Done():
+			return
+		case <-ticker.C:
+			err := l.FairRenew(requestId)
+			if err != nil {
+				log.Printf("Error: autoFairRenew failed, Err: %v \n", err)
+				return
+			}
+		}
+	}
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"errors"
+	"log"
 	"time"
 )
 
@@ -78,7 +79,7 @@ func (l *RedisLock) SpinLock(timeout time.Duration) error {
 		// 如果加锁失败，则休眠一段时间再尝试
 		select {
 		case <-l.Context.Done():
-			return ErrSpinLockDone // 处理取消操作
+			return errors.Join(ErrSpinLockDone, context.Canceled) // 处理取消操作
 		case <-time.After(100 * time.Millisecond):
 			// 继续尝试下一轮加锁
 		}
@@ -118,7 +119,7 @@ func (l *RedisLock) autoRenew() {
 		case <-ticker.C:
 			err := l.Renew()
 			if err != nil {
-				// log.Printf("Error: autoRenew failed, %v", err)
+				log.Printf("Error: autoRenew failed, %v", err)
 				return
 			}
 		}
