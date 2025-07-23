@@ -46,9 +46,9 @@ import (
 
 func main() {
     // 创建 Redis 客户端
-	redisClient := redislock.NewRedisV9Adapter(v9.NewClient(&v9.Options{
-		Addr: "localhost:6379",
-	}))
+    redisClient := redislock.NewRedisV9Adapter(v9.NewClient(&v9.Options{
+        Addr: "localhost:6379",
+    }))
 
     // 创建一个上下文，用于取消锁操作
     ctx := context.Background()

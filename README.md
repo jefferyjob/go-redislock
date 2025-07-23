@@ -46,9 +46,9 @@ import (
 
 func main() {
     // Create a Redis client
-	redisClient := redislock.NewRedisV9Adapter(v9.NewClient(&v9.Options{
-		Addr: "localhost:6379",
-	}))
+    redisClient := redislock.NewRedisV9Adapter(v9.NewClient(&v9.Options{
+        Addr: "localhost:6379",
+    }))
 
     // Create a context for canceling lock operations
     ctx := context.Background()
