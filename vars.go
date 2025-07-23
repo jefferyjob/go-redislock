@@ -7,7 +7,8 @@ import (
 
 const (
 	// 默认锁超时时间
-	lockTime = 5 * time.Second
+	lockTime       = 5 * time.Second
+	requestTimeout = lockTime
 )
 
 var (
