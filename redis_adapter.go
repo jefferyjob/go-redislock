@@ -14,6 +14,23 @@ import (
 	gV2 "github.com/gogf/gf/v2/frame/g"
 )
 
+// NewRedisAdapter creates a corresponding Redis adapter based on the passed in Redis client instance
+//
+// Parameters:
+// - rawClient: Redis client instance
+//
+// Return value:
+// - RedisInter interface instance, encapsulating a unified Eval method
+// - error: If the passed in client type is not supported, an error is returned
+//
+// # NewRedisAdapter 根据传入的 Redis 客户端实例，创建对应的 Redis 适配器
+//
+// 参数：
+//   - rawClient：Redis 客户端实例
+//
+// 返回值：
+//   - RedisInter 接口实例，封装了统一的 Eval 方法
+//   - error：若传入的客户端类型不受支持，则返回错误
 func NewRedisAdapter(rawClient interface{}) (RedisInter, error) {
 	switch client := rawClient.(type) {
 	case *v7.Client:
@@ -32,7 +49,7 @@ func NewRedisAdapter(rawClient interface{}) (RedisInter, error) {
 }
 
 // ----------------------------------------------------------------------------------------------
-// Redis v9 适配器
+// Redis v9 Adapter
 
 type RedisV9Adapter struct {
 	client *v9.Client
@@ -59,7 +76,7 @@ func (w *RedisV9CmdWrapper) Int64() (int64, error) {
 }
 
 // ----------------------------------------------------------------------------------------------
-// Redis v8 适配器
+// Redis v8 Adapter
 
 type RedisV8Adapter struct {
 	client *v8.Client
@@ -86,7 +103,7 @@ func (w *RedisV8CmdWrapper) Int64() (int64, error) {
 }
 
 // ----------------------------------------------------------------------------------------------
-// Redis v7 适配器
+// Redis v7 Adapter
 
 type RedisV7Adapter struct {
 	client *v7.Client
@@ -113,7 +130,7 @@ func (w *RedisV7CmdWrapper) Int64() (int64, error) {
 }
 
 // ----------------------------------------------------------------------------------------------
-// go-zero Redis 适配器
+// go-zero Redis Adapter
 
 type GoZeroRdbAdapter struct {
 	client *zeroRdb.Redis
@@ -163,7 +180,7 @@ func (w *GoZeroRdbCmdWrapper) Int64() (int64, error) {
 }
 
 // ----------------------------------------------------------------------------------------------
-// GoFrame Redis (gredis) v2 适配器
+// GoFrame Redis (gredis) v2 Adapter
 
 type GfRedisV2Adapter struct {
 	client *gfRdbV2.Redis
