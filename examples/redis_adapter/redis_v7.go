@@ -1,15 +1,15 @@
-package redis_client_adapter
+package redis_adapter
 
 import (
 	"context"
 	"fmt"
+	"github.com/go-redis/redis/v7"
 	redislock "github.com/jefferyjob/go-redislock"
-	"github.com/redis/go-redis/v9"
 )
 
-// RedisV9Lock 演示如何在官方 go-redis v9 客户端上使用 redislock 库
-func RedisV9Lock() {
-	redisClient := redislock.NewRedisV9Adapter(redis.NewClient(&redis.Options{
+// RedisV7Lock 演示如何在官方 go-redis v7 客户端上使用 redislock 库
+func RedisV7Lock() {
+	redisClient := redislock.NewRedisV7Adapter(redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	}))
 

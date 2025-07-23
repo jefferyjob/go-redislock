@@ -1,17 +1,21 @@
-package redis_client_adapter
+package redis_adapter
 
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis/v7"
 	redislock "github.com/jefferyjob/go-redislock"
+	v9 "github.com/redis/go-redis/v9"
 )
 
-// RedisV7Lock 演示如何在官方 go-redis v7 客户端上使用 redislock 库
-func RedisV7Lock() {
-	redisClient := redislock.NewRedisV7Adapter(redis.NewClient(&redis.Options{
+// RedisSimpleLock 演示如何在官方 go-redis v9/v8/v7... ... 客户端上使用 redislock 库
+func RedisSimpleLock() {
+	redisClient, err := redislock.NewRedisAdapter(v9.NewClient(&v9.Options{
 		Addr: "localhost:6379",
 	}))
+	if err != nil {
+		fmt.Println("failed to create redis client:", err)
+		return
+	}
 
 	// Create a context for canceling lock operations
 	ctx := context.Background()
@@ -20,7 +24,7 @@ func RedisV7Lock() {
 	lock := redislock.New(ctx, redisClient, "test_key")
 
 	// acquire lock
-	err := lock.Lock()
+	err = lock.Lock()
 	if err != nil {
 		fmt.Println("lock acquisition failed：", err)
 		return

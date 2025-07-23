@@ -1,4 +1,4 @@
-package redis_client_adapter
+package redis_adapter
 
 import (
 	"context"
@@ -15,7 +15,7 @@ func initRedis() error {
 	return err
 }
 
-// GfV2RdbLock 演示如何在 gf 框架的 redis v2 客户端上使用 redislock 库
+// GfV2RdbLock 演示如何在 gf 框架的 gredis v2 客户端上使用 redislock 库
 func GfV2RdbLock() {
 	// Initialize Redis (only once)
 	if err := initRedis(); err != nil {
