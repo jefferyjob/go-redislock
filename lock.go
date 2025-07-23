@@ -8,6 +8,10 @@ import (
 	"time"
 )
 
+type RedisInter interface {
+	redis.Scripter
+}
+
 type RedisLockInter interface {
 	// Lock 加锁
 	Lock() error
@@ -26,10 +30,6 @@ type RedisLockInter interface {
 	FairUnLock(requestId string) error
 	// FairRenew 公平锁续期
 	FairRenew(requestId string) error
-}
-
-type RedisInter interface {
-	redis.Scripter
 }
 
 type RedisLock struct {
@@ -51,8 +51,8 @@ func New(ctx context.Context, redisClient RedisInter, lockKey string, options ..
 	lock := &RedisLock{
 		Context:        ctx,
 		redis:          redisClient,
-		lockTimeout:    lockTime, // 锁默认超时时间
-		requestTimeout: lockTime, // 公平锁在队列中的最大等待时间
+		lockTimeout:    lockTime,       // 锁默认超时时间
+		requestTimeout: requestTimeout, // 公平锁在队列中的最大等待时间
 	}
 
 	for _, f := range options {

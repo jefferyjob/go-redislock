@@ -1,4 +1,4 @@
-package fair
+package main
 
 import (
 	"context"

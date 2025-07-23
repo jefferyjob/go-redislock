@@ -1,4 +1,4 @@
-package reentrant
+package main
 
 import (
 	"context"
