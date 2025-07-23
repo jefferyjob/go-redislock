@@ -4,9 +4,19 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
 	"time"
 )
+
+// RedisInter Redis 客户端接口
+type RedisInter interface {
+	Eval(ctx context.Context, script string, keys []string, args ...interface{}) RedisCmd
+}
+
+// RedisCmd Eval 返回结果的接口
+type RedisCmd interface {
+	Result() (interface{}, error)
+	Int64() (int64, error)
+}
 
 type RedisLockInter interface {
 	// Lock 加锁
@@ -26,10 +36,6 @@ type RedisLockInter interface {
 	FairUnLock(requestId string) error
 	// FairRenew 公平锁续期
 	FairRenew(requestId string) error
-}
-
-type RedisInter interface {
-	redis.Scripter
 }
 
 type RedisLock struct {
