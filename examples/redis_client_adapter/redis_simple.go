@@ -7,7 +7,7 @@ import (
 	v9 "github.com/redis/go-redis/v9"
 )
 
-// RedisSimpleLock 演示如何在官方 go-redis v9 客户端上使用 redislock 库
+// RedisSimpleLock 演示如何在官方 go-redis v9/v8/v7... ... 客户端上使用 redislock 库
 func RedisSimpleLock() {
 	redisClient, err := redislock.NewRedisAdapter(v9.NewClient(&v9.Options{
 		Addr: "localhost:6379",
