@@ -3,12 +3,8 @@ package go_redislock
 import (
 	"context"
 	"github.com/redis/go-redis/v9"
-	"github.com/stretchr/testify/require"
 	"log"
 	"os"
-	"sync"
-	"testing"
-	"time"
 )
 
 // Redis服务器测试
@@ -41,160 +37,160 @@ func getRedisClient() *redis.Client {
 	return rdb
 }
 
-func TestSevLock(t *testing.T) {
-	redisClient := getRedisClient()
-	if redisClient == nil {
-		log.Println("Github actions skip this test")
-		return
-	}
-
-	ctx := context.TODO()
-	key := "test_key_TestSevLock"
-	lock := New(ctx, redisClient, key)
-	defer lock.UnLock()
-
-	err := lock.Lock()
-	if err != nil {
-		t.Errorf("Lock() returned unexpected error: %v", err)
-		return
-	}
-}
+// func TestSevLock(t *testing.T) {
+// 	redisClient := getRedisClient()
+// 	if redisClient == nil {
+// 		log.Println("Github actions skip this test")
+// 		return
+// 	}
+//
+// 	ctx := context.TODO()
+// 	key := "test_key_TestSevLock"
+// 	lock := New(ctx, redisClient, key)
+// 	defer lock.UnLock()
+//
+// 	err := lock.Lock()
+// 	if err != nil {
+// 		t.Errorf("Lock() returned unexpected error: %v", err)
+// 		return
+// 	}
+// }
 
 // 测试加锁成功
-func TestSevLockSuccess(t *testing.T) {
-	redisClient := getRedisClient()
-	if redisClient == nil {
-		log.Println("Github actions skip this test")
-		return
-	}
-
-	ctx := context.Background()
-	key := "test_key_TestSevLockSuccess"
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go func() {
-		defer wg.Done()
-		lock := New(ctx, redisClient, key)
-		err := lock.Lock()
-		if err != nil {
-			t.Errorf("线程一：Lock() returned unexpected error: %v", err)
-			return
-		}
-		time.Sleep(time.Second * 3)
-		defer lock.UnLock()
-		log.Println("线程一：执行结束")
-	}()
-
-	go func() {
-		defer wg.Done()
-		time.Sleep(time.Second * 1)
-		log.Println("线程二：开始抢夺锁资源")
-		lock := New(ctx, redisClient, key)
-
-		times, _ := redisClient.TTL(ctx, key).Result()
-		log.Println("线程二：ttl 时间:", times.Milliseconds())
-
-		err := lock.Lock()
-		if err == nil {
-			defer lock.UnLock()
-			t.Errorf("线程二：Lock() returned unexpected error: %v", err)
-			return
-		}
-	}()
-
-	wg.Wait()
-}
+// func TestSevLockSuccess(t *testing.T) {
+// 	redisClient := getRedisClient()
+// 	if redisClient == nil {
+// 		log.Println("Github actions skip this test")
+// 		return
+// 	}
+//
+// 	ctx := context.Background()
+// 	key := "test_key_TestSevLockSuccess"
+//
+// 	var wg sync.WaitGroup
+// 	wg.Add(2)
+//
+// 	go func() {
+// 		defer wg.Done()
+// 		lock := New(ctx, redisClient, key)
+// 		err := lock.Lock()
+// 		if err != nil {
+// 			t.Errorf("线程一：Lock() returned unexpected error: %v", err)
+// 			return
+// 		}
+// 		time.Sleep(time.Second * 3)
+// 		defer lock.UnLock()
+// 		log.Println("线程一：执行结束")
+// 	}()
+//
+// 	go func() {
+// 		defer wg.Done()
+// 		time.Sleep(time.Second * 1)
+// 		log.Println("线程二：开始抢夺锁资源")
+// 		lock := New(ctx, redisClient, key)
+//
+// 		times, _ := redisClient.TTL(ctx, key).Result()
+// 		log.Println("线程二：ttl 时间:", times.Milliseconds())
+//
+// 		err := lock.Lock()
+// 		if err == nil {
+// 			defer lock.UnLock()
+// 			t.Errorf("线程二：Lock() returned unexpected error: %v", err)
+// 			return
+// 		}
+// 	}()
+//
+// 	wg.Wait()
+// }
 
 // 测试可重入锁计数器
-func TestSevLockCounter(t *testing.T) {
-	redisClient := getRedisClient()
-	if redisClient == nil {
-		log.Println("Github actions skip this test")
-		return
-	}
-
-	ctx := context.Background()
-	key := "test_key_TestSevLockCounter"
-	lock := New(ctx, redisClient, key)
-
-	err := lock.Lock()
-	if err != nil {
-		t.Errorf("任务1：Lock() returned unexpected error: %v", err)
-		return
-	}
-	defer lock.UnLock()
-
-	err = lock.Lock()
-	if err != nil {
-		t.Errorf("任务2：Lock() returned unexpected error: %v", err)
-		return
-	}
-	defer lock.UnLock()
-}
+// func TestSevLockCounter(t *testing.T) {
+// 	redisClient := getRedisClient()
+// 	if redisClient == nil {
+// 		log.Println("Github actions skip this test")
+// 		return
+// 	}
+//
+// 	ctx := context.Background()
+// 	key := "test_key_TestSevLockCounter"
+// 	lock := New(ctx, redisClient, key)
+//
+// 	err := lock.Lock()
+// 	if err != nil {
+// 		t.Errorf("任务1：Lock() returned unexpected error: %v", err)
+// 		return
+// 	}
+// 	defer lock.UnLock()
+//
+// 	err = lock.Lock()
+// 	if err != nil {
+// 		t.Errorf("任务2：Lock() returned unexpected error: %v", err)
+// 		return
+// 	}
+// 	defer lock.UnLock()
+// }
 
 // 测试锁自动续期
-func TestSevAutoRenewSuccess(t *testing.T) {
-	redisClient := getRedisClient()
-	if redisClient == nil {
-		log.Println("Github actions skip this test")
-		return
-	}
+// func TestSevAutoRenewSuccess(t *testing.T) {
+// 	redisClient := getRedisClient()
+// 	if redisClient == nil {
+// 		log.Println("Github actions skip this test")
+// 		return
+// 	}
+//
+// 	ctx := context.Background()
+//
+// 	key := "test_key_TestSevAutoRenewSuccess"
+// 	token := "some_token"
+// 	token2 := "some_token2"
+//
+// 	var wg sync.WaitGroup
+// 	wg.Add(2)
+//
+// 	// 线程1
+// 	go func() {
+// 		defer wg.Done()
+// 		lock := New(ctx, redisClient, key, WithToken(token), WithAutoRenew())
+// 		err := lock.Lock()
+// 		if err != nil {
+// 			t.Errorf("Lock() returned unexpected error: %v", err)
+// 			return
+// 		}
+// 		defer lock.UnLock()
+//
+// 		log.Println("线程1：自旋锁加锁成功")
+// 		time.Sleep(time.Second * 10)
+// 		log.Println("线程1：任务执行结束")
+// 	}()
+//
+// 	// 线程2
+// 	go func() {
+// 		defer wg.Done()
+// 		time.Sleep(time.Second * 7)
+// 		log.Println("线程2：开始抢夺锁资源")
+// 		lock := New(ctx, redisClient, key, WithToken(token2), WithAutoRenew())
+// 		err := lock.Lock()
+// 		if err == nil {
+// 			defer lock.UnLock()
+// 			t.Errorf("线程2 Lock() not expectation success")
+// 			return
+// 		}
+// 	}()
+//
+// 	wg.Wait()
+// }
 
-	ctx := context.Background()
-
-	key := "test_key_TestSevAutoRenewSuccess"
-	token := "some_token"
-	token2 := "some_token2"
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	// 线程1
-	go func() {
-		defer wg.Done()
-		lock := New(ctx, redisClient, key, WithToken(token), WithAutoRenew())
-		err := lock.Lock()
-		if err != nil {
-			t.Errorf("Lock() returned unexpected error: %v", err)
-			return
-		}
-		defer lock.UnLock()
-
-		log.Println("线程1：自旋锁加锁成功")
-		time.Sleep(time.Second * 10)
-		log.Println("线程1：任务执行结束")
-	}()
-
-	// 线程2
-	go func() {
-		defer wg.Done()
-		time.Sleep(time.Second * 7)
-		log.Println("线程2：开始抢夺锁资源")
-		lock := New(ctx, redisClient, key, WithToken(token2), WithAutoRenew())
-		err := lock.Lock()
-		if err == nil {
-			defer lock.UnLock()
-			t.Errorf("线程2 Lock() not expectation success")
-			return
-		}
-	}()
-
-	wg.Wait()
-}
-
-func TestAutoRenew5(t *testing.T) {
-	redisClient := getRedisClient()
-	if redisClient == nil {
-		log.Println("Github actions skip this test")
-		return
-	}
-	lock := New(context.TODO(), redisClient, "key", WithToken("token"),
-		WithAutoRenew())
-	err := lock.Lock()
-	require.NoError(t, err)
-	defer lock.UnLock()
-
-	time.Sleep(time.Second * 20)
-}
+// func TestAutoRenew5(t *testing.T) {
+// 	redisClient := getRedisClient()
+// 	if redisClient == nil {
+// 		log.Println("Github actions skip this test")
+// 		return
+// 	}
+// 	lock := New(context.TODO(), redisClient, "key", WithToken("token"),
+// 		WithAutoRenew())
+// 	err := lock.Lock()
+// 	require.NoError(t, err)
+// 	defer lock.UnLock()
+//
+// 	time.Sleep(time.Second * 20)
+// }

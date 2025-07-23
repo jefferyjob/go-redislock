@@ -18,6 +18,10 @@ type RedisCmd interface {
 	Int64() (int64, error)
 }
 
+// type RedisInter interface {
+// 	redis.Scripter
+// }
+
 type RedisLockInter interface {
 	// Lock 加锁
 	Lock() error
