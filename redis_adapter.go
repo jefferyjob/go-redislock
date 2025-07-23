@@ -9,6 +9,9 @@ import (
 	v9 "github.com/redis/go-redis/v9"
 
 	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
+
+	gfRdbV2 "github.com/gogf/gf/v2/database/gredis"
+	gV2 "github.com/gogf/gf/v2/frame/g"
 )
 
 func NewRedisAdapter(rawClient interface{}) (RedisInter, error) {
@@ -21,12 +24,15 @@ func NewRedisAdapter(rawClient interface{}) (RedisInter, error) {
 		return NewRedisV9Adapter(client), nil
 	case *zeroRdb.Redis:
 		return NewGoZeroRdbAdapter(client), nil
+	case *gfRdbV2.Redis:
+		return NewGfRedisV2Adapter(client), nil
 	default:
 		return nil, fmt.Errorf("unsupported redis client type: %T", rawClient)
 	}
 }
 
-// ---------- Redis v9 适配器 ----------
+// ----------------------------------------------------------------------------------------------
+// Redis v9 适配器
 
 type RedisV9Adapter struct {
 	client *v9.Client
@@ -52,7 +58,8 @@ func (w *RedisV9CmdWrapper) Int64() (int64, error) {
 	return w.cmd.Int64()
 }
 
-// ---------- Redis v8 适配器 ----------
+// ----------------------------------------------------------------------------------------------
+// Redis v8 适配器
 
 type RedisV8Adapter struct {
 	client *v8.Client
@@ -78,7 +85,8 @@ func (w *RedisV8CmdWrapper) Int64() (int64, error) {
 	return w.cmd.Int64()
 }
 
-// ---------- Redis v7 适配器 ----------
+// ----------------------------------------------------------------------------------------------
+// Redis v7 适配器
 
 type RedisV7Adapter struct {
 	client *v7.Client
@@ -104,7 +112,8 @@ func (w *RedisV7CmdWrapper) Int64() (int64, error) {
 	return w.cmd.Int64()
 }
 
-// ---------- go-zero Redis 适配器 ----------
+// ----------------------------------------------------------------------------------------------
+// go-zero Redis 适配器
 
 type GoZeroRdbAdapter struct {
 	client *zeroRdb.Redis
@@ -140,6 +149,56 @@ func (w *GoZeroRdbCmdWrapper) Int64() (int64, error) {
 	}
 
 	switch v := w.cmd.(type) {
+	case int64:
+		return v, nil
+	case int:
+		return int64(v), nil
+	case string:
+		var i int64
+		_, err := fmt.Sscanf(v, "%d", &i)
+		return i, err
+	default:
+		return 0, fmt.Errorf("cannot convert result to int: %T", w.cmd)
+	}
+}
+
+// ----------------------------------------------------------------------------------------------
+// GoFrame Redis (gredis) v2 适配器
+
+type GfRedisV2Adapter struct {
+	client *gfRdbV2.Redis
+}
+
+func NewGfRedisV2Adapter(client *gfRdbV2.Redis) RedisInter {
+	return &GfRedisV2Adapter{client: client}
+}
+
+func (r *GfRedisV2Adapter) Eval(ctx context.Context, script string, keys []string, args ...interface{}) RedisCmd {
+	eval, err := r.client.Eval(ctx, script, int64(len(keys)), keys, args)
+	return &GfRedisV2CmdWrapper{
+		cmd: eval,
+		err: err,
+	}
+}
+
+type GfRedisV2CmdWrapper struct {
+	cmd *gV2.Var
+	err error
+}
+
+func (w *GfRedisV2CmdWrapper) Result() (interface{}, error) {
+	if w.err != nil {
+		return nil, w.err
+	}
+	return w.cmd.Val(), nil
+}
+
+func (w *GfRedisV2CmdWrapper) Int64() (int64, error) {
+	if w.err != nil {
+		return 0, w.err
+	}
+
+	switch v := w.cmd.Val().(type) {
 	case int64:
 		return v, nil
 	case int:
