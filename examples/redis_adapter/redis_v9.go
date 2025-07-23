@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	redislock "github.com/jefferyjob/go-redislock"
-	"github.com/redis/go-redis/v9"
+	v9 "github.com/redis/go-redis/v9"
 )
 
 // RedisV9Lock 演示如何在官方 go-redis v9 客户端上使用 redislock 库
 func RedisV9Lock() {
-	redisClient := redislock.NewRedisV9Adapter(redis.NewClient(&redis.Options{
+	redisClient := redislock.NewRedisV9Adapter(v9.NewClient(&v9.Options{
 		Addr: "localhost:6379",
 	}))
 

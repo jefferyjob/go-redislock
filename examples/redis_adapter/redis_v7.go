@@ -3,13 +3,13 @@ package redis_adapter
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis/v7"
+	v7 "github.com/go-redis/redis/v7"
 	redislock "github.com/jefferyjob/go-redislock"
 )
 
 // RedisV7Lock 演示如何在官方 go-redis v7 客户端上使用 redislock 库
 func RedisV7Lock() {
-	redisClient := redislock.NewRedisV7Adapter(redis.NewClient(&redis.Options{
+	redisClient := redislock.NewRedisV7Adapter(v7.NewClient(&v7.Options{
 		Addr: "localhost:6379",
 	}))
 

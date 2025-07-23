@@ -41,16 +41,14 @@ import (
 	"context"
 	"fmt"
 	redislock "github.com/jefferyjob/go-redislock"
-	"github.com/redis/go-redis/v9"
+	v9 "github.com/redis/go-redis/v9"
 )
 
 func main() {
     // 创建 Redis 客户端
-    redisClient := redis.NewClient(&redis.Options{
-        Addr:     "localhost:6379",
-        Password: "",
-        DB:       0,
-    })
+	redisClient := redislock.NewRedisV9Adapter(v9.NewClient(&v9.Options{
+		Addr: "localhost:6379",
+	}))
 
     // 创建一个上下文，用于取消锁操作
     ctx := context.Background()
