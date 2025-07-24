@@ -28,6 +28,11 @@ cover: ## 生成测试覆盖率报告
 run-redis: ## Docker启动redis服务
 	docker run -itd -p 63790:6379 --name example_redislock redis:5.0.3-alpine
 
+.PHONY:mocks
+mocks: ## 基于Interface生成Mock代码
+	mockgen -source=lock.go -destination=mocks/lock.go -package=mocks
+	mockgen -source=adapter.go -destination=mocks/adapter.go -package=mocks
+
 .PHONY:help
 .DEFAULT_GOAL:=help
 help:

@@ -5,14 +5,13 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	redislock "github.com/jefferyjob/go-redislock"
-	"github.com/redis/go-redis/v9"
 	"log"
 	"sync"
 	"time"
 )
 
 type Ticket struct {
-	rdb *redis.Client
+	rdb redislock.RedisInter
 }
 
 // 并发模拟 50 位用户抢票

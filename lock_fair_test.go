@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"github.com/go-redis/redismock/v9"
-	"github.com/redis/go-redis/v9"
 	"testing"
 	"time"
 )
@@ -12,7 +11,7 @@ import (
 func TestFairLock(t *testing.T) {
 	tests := []struct {
 		name       string
-		mock       func(t *testing.T, ctx context.Context) *redis.Client
+		mock       func(t *testing.T, ctx context.Context) RedisInter
 		inputKey   string
 		inputReqId string
 		sleepTime  time.Duration // 模拟业务执行时间
@@ -20,12 +19,12 @@ func TestFairLock(t *testing.T) {
 	}{
 		{
 			name: "Lua脚本执行成功",
-			mock: func(t *testing.T, ctx context.Context) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) RedisInter {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(fairLockScript, []string{"test_key"},
 					"test_req_id", lockTime.Milliseconds(), lockTime.Milliseconds()).
 					SetVal(int64(1))
-				return db
+				return NewRedisMockAdapter(db)
 			},
 			inputKey:   "test_key",
 			inputReqId: "test_req_id",
@@ -33,7 +32,7 @@ func TestFairLock(t *testing.T) {
 		},
 		{
 			name: "触发自动续期",
-			mock: func(t *testing.T, ctx context.Context) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) RedisInter {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(fairLockScript, []string{"key"},
 					"req_id", lockTime.Milliseconds(), lockTime.Milliseconds()).
@@ -41,7 +40,7 @@ func TestFairLock(t *testing.T) {
 				mock.ExpectEval(fairRenewScript, []string{"key"},
 					"req_id", lockTime.Milliseconds()).
 					SetVal(int64(1))
-				return db
+				return NewRedisMockAdapter(db)
 			},
 			inputKey:   "key",
 			inputReqId: "req_id",
@@ -74,7 +73,7 @@ func TestFairLock(t *testing.T) {
 func TestFairLockFairRenew(t *testing.T) {
 	tests := []struct {
 		name         string
-		mock         func(t *testing.T, ctx context.Context) *redis.Client
+		mock         func(t *testing.T, ctx context.Context) RedisInter
 		inputKey     string
 		inputReqId   string
 		sleepTime    time.Duration // 模拟业务执行时间
@@ -83,7 +82,7 @@ func TestFairLockFairRenew(t *testing.T) {
 	}{
 		{
 			name: "续期失败",
-			mock: func(t *testing.T, ctx context.Context) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) RedisInter {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(fairLockScript, []string{"key"},
 					"req_id", lockTime.Milliseconds(), lockTime.Milliseconds()).
@@ -91,7 +90,7 @@ func TestFairLockFairRenew(t *testing.T) {
 				mock.ExpectEval(fairRenewScript, []string{"key"},
 					"req_id", lockTime.Milliseconds()).
 					SetVal(int64(0))
-				return db
+				return NewRedisMockAdapter(db)
 			},
 			inputKey:     "key",
 			inputReqId:   "req_id",
@@ -127,7 +126,7 @@ func TestFairLockFairRenew(t *testing.T) {
 func TestFairUnLock(t *testing.T) {
 	tests := []struct {
 		name          string
-		mock          func(t *testing.T, ctx context.Context) *redis.Client
+		mock          func(t *testing.T, ctx context.Context) RedisInter
 		inputKey      string
 		inputReqId    string
 		wantLockErr   error
@@ -135,12 +134,12 @@ func TestFairUnLock(t *testing.T) {
 	}{
 		{
 			name: "加锁成功后解锁成功",
-			mock: func(t *testing.T, ctx context.Context) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) RedisInter {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(fairLockScript, []string{"test_key"},
 					"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).SetVal(int64(1))
 				mock.ExpectEval(fairUnLockScript, []string{"test_key"}, "test_req_id").SetVal(int64(1))
-				return db
+				return NewRedisMockAdapter(db)
 			},
 			inputKey:      "test_key",
 			inputReqId:    "test_req_id",
@@ -171,19 +170,19 @@ func TestFairUnLock(t *testing.T) {
 func TestFairLockErr(t *testing.T) {
 	tests := []struct {
 		name       string
-		mock       func(t *testing.T, ctx context.Context) *redis.Client
+		mock       func(t *testing.T, ctx context.Context) RedisInter
 		inputKey   string
 		inputReqId string
 		wantErr    error
 	}{
 		{
 			name: "Lua脚本执行异常",
-			mock: func(t *testing.T, ctx context.Context) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) RedisInter {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(fairLockScript, []string{"test_key"},
 					"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).
 					SetErr(ErrException)
-				return db
+				return NewRedisMockAdapter(db)
 			},
 			inputKey:   "test_key",
 			inputReqId: "test_req_id",
@@ -191,12 +190,12 @@ func TestFairLockErr(t *testing.T) {
 		},
 		{
 			name: "公平锁-获取锁资源失败",
-			mock: func(t *testing.T, ctx context.Context) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) RedisInter {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(fairLockScript, []string{"test_key"},
 					"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).
 					SetVal(int64(0))
-				return db
+				return NewRedisMockAdapter(db)
 			},
 			inputKey:   "test_key",
 			inputReqId: "test_req_id",
@@ -221,7 +220,7 @@ func TestFairLockErr(t *testing.T) {
 func TestFairUnLockErr(t *testing.T) {
 	tests := []struct {
 		name          string
-		mock          func(t *testing.T, ctx context.Context) *redis.Client
+		mock          func(t *testing.T, ctx context.Context) RedisInter
 		inputKey      string
 		inputReqId    string
 		wantLockErr   error
@@ -229,12 +228,12 @@ func TestFairUnLockErr(t *testing.T) {
 	}{
 		{
 			name: "公平锁-解锁-Lua脚本执行异常",
-			mock: func(t *testing.T, ctx context.Context) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) RedisInter {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(fairLockScript, []string{"test_key"},
 					"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).SetVal(int64(1))
 				mock.ExpectEval(fairUnLockScript, []string{"test_key"}, "test_req_id").SetErr(ErrException)
-				return db
+				return NewRedisMockAdapter(db)
 			},
 			inputKey:      "test_key",
 			inputReqId:    "test_req_id",
@@ -243,14 +242,14 @@ func TestFairUnLockErr(t *testing.T) {
 		},
 		{
 			name: "公平锁-解锁-解锁失败",
-			mock: func(t *testing.T, ctx context.Context) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) RedisInter {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(fairLockScript, []string{"test_key"},
 					"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).
 					SetVal(int64(1))
 				mock.ExpectEval(fairUnLockScript, []string{"test_key"}, "test_req_id").
 					SetVal(int64(0))
-				return db
+				return NewRedisMockAdapter(db)
 			},
 			inputKey:      "test_key",
 			inputReqId:    "test_req_id",
@@ -280,7 +279,7 @@ func TestFairUnLockErr(t *testing.T) {
 func TestSpinFairLock(t *testing.T) {
 	tests := []struct {
 		name        string
-		mock        func(t *testing.T, ctx context.Context) *redis.Client
+		mock        func(t *testing.T, ctx context.Context) RedisInter
 		before      func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
 		after       func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
 		inputKey    string
@@ -290,11 +289,11 @@ func TestSpinFairLock(t *testing.T) {
 	}{
 		{
 			name: "自旋公平锁-成功获取锁",
-			mock: func(t *testing.T, ctx context.Context) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) RedisInter {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(fairLockScript, []string{"test_key"},
 					"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).SetVal(int64(1))
-				return db
+				return NewRedisMockAdapter(db)
 			},
 			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
 			},
@@ -307,14 +306,14 @@ func TestSpinFairLock(t *testing.T) {
 		},
 		{
 			name: "自旋公平锁-超时",
-			mock: func(t *testing.T, ctx context.Context) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) RedisInter {
 				db, mock := redismock.NewClientMock()
 				// 3秒 = 30 * 100毫秒
 				for i := 0; i < 30; i++ {
 					mock.ExpectEval(fairLockScript, []string{"test_key"},
 						"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).SetVal(int64(0))
 				}
-				return db
+				return NewRedisMockAdapter(db)
 			},
 			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
 			},
@@ -327,14 +326,14 @@ func TestSpinFairLock(t *testing.T) {
 		},
 		{
 			name: "自旋公平锁 Context Cancel",
-			mock: func(t *testing.T, ctx context.Context) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) RedisInter {
 				db, mock := redismock.NewClientMock()
 				// 5秒 = 50 * 100毫秒
 				for i := 0; i < 50; i++ {
 					mock.ExpectEval(fairLockScript, []string{"test_key"},
 						"test_req_id", 5*time.Second.Milliseconds(), 5*time.Second.Milliseconds()).SetVal(int64(0))
 				}
-				return db
+				return NewRedisMockAdapter(db)
 			},
 			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
 				go func() {

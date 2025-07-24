@@ -4,12 +4,11 @@ import (
 	"context"
 	"fmt"
 	redislock "github.com/jefferyjob/go-redislock"
-	"github.com/redis/go-redis/v9"
 	"time"
 )
 
 type Order struct {
-	rdb *redis.Client
+	rdb redislock.RedisInter
 }
 
 // CreateOrder 防止重复下单

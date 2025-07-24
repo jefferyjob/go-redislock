@@ -16,60 +16,58 @@ import (
 // 你可以实用下面的命令启动一个redis容器进行测试
 // docker run -d -p 63790:6379 --name go_redis_lock redis
 // 注意：该服务在 GITHUB ACTIONS 并不会被测试
-func getRedisClient() *redis.Client {
+func getRedisClient() (RedisInter, *redis.Client) {
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
-		return nil
+		return nil, nil
 	}
 
-	if true {
-		return nil
-	}
+	// if true {
+	// 	return nil, nil
+	// }
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr: "127.0.0.1:63790",
 	})
+	rdbAdapter := NewRedisV9Adapter(rdb)
 
-	// 尝试执行PING命令
-	// 如果执行PING命令出错，则表明连接失败
-	ctx := context.TODO()
-	_, err := rdb.Ping(ctx).Result()
-	if err != nil {
-		log.Printf("Failed to ping Redis: %v", err)
-		return nil
-	}
-
-	return rdb
+	return rdbAdapter, rdb
 }
 
+// 测试加锁流程
 func TestSevLock(t *testing.T) {
-	redisClient := getRedisClient()
+	redisClient, _ := getRedisClient()
 	if redisClient == nil {
 		log.Println("Github actions skip this test")
 		return
 	}
 
-	ctx := context.TODO()
-	key := "test_key_TestSevLock"
-	lock := New(redisClient, key)
-	defer lock.UnLock(ctx)
+	key := "test_key"
 
+	ctx := context.TODO()
+	lock := New(redisClient, key, WithAutoRenew())
 	err := lock.Lock(ctx)
 	if err != nil {
-		t.Errorf("Lock() returned unexpected error: %v", err)
+		t.Errorf("lock error: %v", err)
 		return
 	}
+	defer lock.UnLock(ctx)
+
+	// 模拟业务处理
+	time.Sleep(5 * time.Second)
 }
 
-// 测试加锁成功
+// 测试锁资源抢夺
+// 线程1抢夺锁资源
+// 线程2尝试抢夺锁资源失败
 func TestSevLockSuccess(t *testing.T) {
-	redisClient := getRedisClient()
+	redisClient, rdb := getRedisClient()
 	if redisClient == nil {
 		log.Println("Github actions skip this test")
 		return
 	}
 
 	ctx := context.Background()
-	key := "test_key_TestSevLockSuccess"
+	key := "test_key"
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -84,7 +82,7 @@ func TestSevLockSuccess(t *testing.T) {
 		}
 		time.Sleep(time.Second * 3)
 		defer lock.UnLock(ctx)
-		log.Println("线程一：执行结束")
+		log.Println("线程一：任务执行结束")
 	}()
 
 	go func() {
@@ -93,8 +91,8 @@ func TestSevLockSuccess(t *testing.T) {
 		log.Println("线程二：开始抢夺锁资源")
 		lock := New(redisClient, key)
 
-		times, _ := redisClient.TTL(ctx, key).Result()
-		log.Println("线程二：ttl 时间:", times.Milliseconds())
+		times, _ := rdb.TTL(ctx, "{"+key+"}").Result()
+		log.Println("线程二：ttl 过期时间还有: ", times.Seconds(), " 秒")
 
 		err := lock.Lock(ctx)
 		if err == nil {
@@ -102,6 +100,8 @@ func TestSevLockSuccess(t *testing.T) {
 			t.Errorf("线程二：Lock() returned unexpected error: %v", err)
 			return
 		}
+
+		log.Println("线程二：抢夺锁失败，锁已被其他线程占用")
 	}()
 
 	wg.Wait()
@@ -109,34 +109,38 @@ func TestSevLockSuccess(t *testing.T) {
 
 // 测试可重入锁计数器
 func TestSevLockCounter(t *testing.T) {
-	redisClient := getRedisClient()
+	redisClient, _ := getRedisClient()
 	if redisClient == nil {
 		log.Println("Github actions skip this test")
 		return
 	}
 
 	ctx := context.Background()
-	key := "test_key_TestSevLockCounter"
+	key := "test_key"
 	lock := New(redisClient, key)
 
 	err := lock.Lock(ctx)
 	if err != nil {
-		t.Errorf("任务1：Lock() returned unexpected error: %v", err)
+		t.Errorf("任务1：error: %v", err)
 		return
 	}
 	defer lock.UnLock(ctx)
+	log.Println("任务1：锁已获取，开始执行任务")
 
 	err = lock.Lock(ctx)
 	if err != nil {
-		t.Errorf("任务2：Lock() returned unexpected error: %v", err)
+		t.Errorf("任务2： error: %v", err)
 		return
 	}
 	defer lock.UnLock(ctx)
+	log.Println("任务2：锁已获取，开始执行任务")
 }
 
 // 测试锁自动续期
+// 测试线程1加锁，任务执行时间10秒，需要自动续期，保证不被其他资源抢占锁
+// 线程2在第7秒尝试抢夺锁资源失败
 func TestSevAutoRenewSuccess(t *testing.T) {
-	redisClient := getRedisClient()
+	redisClient, _ := getRedisClient()
 	if redisClient == nil {
 		log.Println("Github actions skip this test")
 		return
@@ -144,9 +148,9 @@ func TestSevAutoRenewSuccess(t *testing.T) {
 
 	ctx := context.Background()
 
-	key := "test_key_TestSevAutoRenewSuccess"
-	token := "some_token"
-	token2 := "some_token2"
+	key := "test_key"
+	token := "test_token"
+	token2 := "test_token2"
 
 	var wg sync.WaitGroup
 	wg.Add(2)
@@ -184,20 +188,34 @@ func TestSevAutoRenewSuccess(t *testing.T) {
 	wg.Wait()
 }
 
-func TestAutoRenew5(t *testing.T) {
-	redisClient := getRedisClient()
+// 展示自动续期流程
+// 可以在协程里清晰的看到每 1/3 的时间自动续期锁
+func TestAutoRenewList(t *testing.T) {
+	redisClient, rdb := getRedisClient()
 	if redisClient == nil {
 		log.Println("Github actions skip this test")
 		return
 	}
 
 	ctx := context.Background()
+	key := "test_key"
 
-	lock := New(redisClient, "key", WithToken("token"),
+	lock := New(redisClient, key, WithToken("token"),
+		WithTimeout(10*time.Second),
 		WithAutoRenew())
 	err := lock.Lock(ctx)
 	require.NoError(t, err)
 	defer lock.UnLock(ctx)
 
+	// 不断查询该锁的到期时间进行展示
+	go func() {
+		for i := 0; i < 20; i++ {
+			times, _ := rdb.TTL(ctx, "{"+key+"}").Result()
+			log.Println("ttl 过期时间还有: ", times.Seconds(), " 秒")
+			time.Sleep(time.Second) // 每秒执行一次
+		}
+	}()
+
+	// 模拟业务处理
 	time.Sleep(time.Second * 20)
 }

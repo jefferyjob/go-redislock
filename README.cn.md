@@ -13,6 +13,19 @@
 ## 介绍
 go-redislock 是一个用于 Go 的库，用于使用 Redis 作为后端存储提供分布式锁功能。确保在分布式环境中的并发访问下实现数据共享和资源互斥。我们的分布式锁具备可靠性、高性能、超时机制、可重入性和灵活的锁释放方式等特性，简化了分布式锁的使用，让您专注于业务逻辑的实现。
 
+## Redis客户端支持
+go-redislock 提供高度可扩展的客户端适配机制，已内置支持以下主流 Redis 客户端，详细示例请参考 [examples](examples/redis_adapter) 。
+
+| Redis客户端版本  | 包路径 | 是否支持 | 适配器方法 |
+|-------------|--------------------------------------------------| -------- |-----------------------|
+| go-redis v7 | `github.com/go-redis/redis/v7`                   | ✅        | NewRedisV7Adapter()   |
+| go-redis v8 | `github.com/go-redis/redis/v8`                   | ✅        | NewRedisV8Adapter()   |
+| go-redis v9 | `github.com/redis/go-redis/v9`                   | ✅        | NewRedisV9Adapter()   |
+| go-zero Redis | `github.com/zeromicro/go-zero/core/stores/redis` | ✅        | NewGoZeroRdbAdapter() |
+| goframe Redis | `github.com/gogf/gf/v2/database/gredis`          | ✅        | NewGfRedisV2Adapter() |
+
+如您使用的 Redis 客户端不在上述列表中，也可以实现接口 `RedisInter` 来接入任意 Redis 客户端。
+
 ## 快速开始
 
 ### 安装
@@ -32,29 +45,32 @@ import (
 )
 
 func main() {
-    // 创建 Redis 客户端
-    redisClient := redis.NewClient(&redis.Options{
-        Addr:     "localhost:6379",
-    })
+	// 创建 Redis 客户端
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
 
-    // 创建一个上下文，用于取消锁操作
-    ctx := context.Background()
+	// 创建 Redis 客户端适配器
+	// 注意：根据不同的 Redis 客户端包使用不同的适配器
+	rdbAdapter := redislock.NewRedisV9Adapter(rdb)
 
-    // 创建 RedisLock 对象
-    lock := redislock.New(redisClient, "test_key")
+	// 创建用于取消锁定操作的上下文
+	ctx := context.Background()
 
-    // 获取锁
-    err := lock.Lock(ctx)
-    if err != nil {
-        fmt.Println("锁获取失败：", err)
-        return
-    }
-    defer lock.UnLock(ctx) // 解锁
+	// 创建 RedisLock 对象
+	lock := redislock.New(rdbAdapter, "test_key")
 
-    // 在锁定期间执行任务
-    // ...
+	// 获取锁
+	err := lock.Lock(ctx)
+	if err != nil {
+		fmt.Println("lock获取失败：", err)
+		return
+	}
+	defer lock.UnLock(ctx) // 解锁
 
-    fmt.Println("任务执行完成")
+	// 锁定期间执行任务
+	// ...
+	fmt.Println("任务执行完成")
 }
 ```
 
