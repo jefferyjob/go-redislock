@@ -20,7 +20,6 @@ func (t *Ticket) buy(ctx context.Context) {
 	lockKey := "fair:lock"
 
 	lock := redislock.New(
-		ctx,
 		t.rdb,
 		lockKey,
 		redislock.WithTimeout(30*time.Second), // 锁 TTL
@@ -37,13 +36,13 @@ func (t *Ticket) buy(ctx context.Context) {
 			requestId := fmt.Sprintf("user:%d:%s", userId, uuid.New().String())
 
 			// 自旋公平锁 —— 在 N 秒内一直尝试
-			if err := lock.SpinFairLock(requestId, 10*time.Second); err != nil {
+			if err := lock.SpinFairLock(ctx, requestId, 10*time.Second); err != nil {
 				log.Printf("[%s] 排队超时，未抢到锁: %v", requestId, err)
 				return
 			}
 
 			// 下面开始处于临界区，只有队首线程能执行
-			defer lock.FairUnLock(requestId)
+			defer lock.FairUnLock(ctx, requestId)
 
 			// 检查剩余票数
 			// 扣减库存 / 为该用户锁定票资源

@@ -35,23 +35,21 @@ func main() {
     // Create a Redis client
     redisClient := redis.NewClient(&redis.Options{
         Addr:     "localhost:6379",
-        Password: "",
-        DB:       0,
     })
 
     // Create a context for canceling lock operations
     ctx := context.Background()
 
     // Create a RedisLock object
-    lock := redislock.New(ctx, redisClient, "test_key")
+    lock := redislock.New(redisClient, "test_key")
 
     // acquire lock
-    err := lock.Lock()
+    err := lock.Lock(ctx)
     if err != nil {
         fmt.Println("lock acquisition failed：", err)
         return
     }
-    defer lock.UnLock() // unlock
+    defer lock.UnLock(ctx) // unlock
 
     // Perform tasks during lockdown
     // ...
@@ -93,6 +91,7 @@ type RedisLockInter interface {
 
 
 ## Precautions
+- Create a new `RedisLock` instance each time you lock.
 - Please make sure your Redis server is set up correctly, connected and running properly.
 - When using the automatic renewal function, ensure that there is no long-term blocking during task execution, so as not to cause the renewal to fail.
 - Consider using appropriate timeout settings to avoid deadlocks due to network issues etc.

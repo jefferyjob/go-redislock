@@ -35,23 +35,21 @@ func main() {
     // 创建 Redis 客户端
     redisClient := redis.NewClient(&redis.Options{
         Addr:     "localhost:6379",
-        Password: "",
-        DB:       0,
     })
 
     // 创建一个上下文，用于取消锁操作
     ctx := context.Background()
 
     // 创建 RedisLock 对象
-    lock := redislock.New(ctx, redisClient, "test_key")
+    lock := redislock.New(redisClient, "test_key")
 
     // 获取锁
-    err := lock.Lock()
+    err := lock.Lock(ctx)
     if err != nil {
         fmt.Println("锁获取失败：", err)
         return
     }
-    defer lock.UnLock() // 解锁
+    defer lock.UnLock(ctx) // 解锁
 
     // 在锁定期间执行任务
     // ...
@@ -93,6 +91,7 @@ type RedisLockInter interface {
 
 
 ## 注意事项
+- 每次加锁都创建一个新的 `RedisLock` 实例。
 - 请确保您的 Redis 服务器设置正确，并且能够正常连接和运行。
 - 在使用自动续约功能时，确保在任务执行期间没有出现长时间的阻塞，以免导致续约失败。
 - 考虑使用适当的超时设置，以避免由于网络问题等原因导致死锁。

@@ -50,10 +50,10 @@ func TestSevLock(t *testing.T) {
 
 	ctx := context.TODO()
 	key := "test_key_TestSevLock"
-	lock := New(ctx, redisClient, key)
-	defer lock.UnLock()
+	lock := New(redisClient, key)
+	defer lock.UnLock(ctx)
 
-	err := lock.Lock()
+	err := lock.Lock(ctx)
 	if err != nil {
 		t.Errorf("Lock() returned unexpected error: %v", err)
 		return
@@ -76,14 +76,14 @@ func TestSevLockSuccess(t *testing.T) {
 
 	go func() {
 		defer wg.Done()
-		lock := New(ctx, redisClient, key)
-		err := lock.Lock()
+		lock := New(redisClient, key)
+		err := lock.Lock(ctx)
 		if err != nil {
 			t.Errorf("线程一：Lock() returned unexpected error: %v", err)
 			return
 		}
 		time.Sleep(time.Second * 3)
-		defer lock.UnLock()
+		defer lock.UnLock(ctx)
 		log.Println("线程一：执行结束")
 	}()
 
@@ -91,14 +91,14 @@ func TestSevLockSuccess(t *testing.T) {
 		defer wg.Done()
 		time.Sleep(time.Second * 1)
 		log.Println("线程二：开始抢夺锁资源")
-		lock := New(ctx, redisClient, key)
+		lock := New(redisClient, key)
 
 		times, _ := redisClient.TTL(ctx, key).Result()
 		log.Println("线程二：ttl 时间:", times.Milliseconds())
 
-		err := lock.Lock()
+		err := lock.Lock(ctx)
 		if err == nil {
-			defer lock.UnLock()
+			defer lock.UnLock(ctx)
 			t.Errorf("线程二：Lock() returned unexpected error: %v", err)
 			return
 		}
@@ -117,21 +117,21 @@ func TestSevLockCounter(t *testing.T) {
 
 	ctx := context.Background()
 	key := "test_key_TestSevLockCounter"
-	lock := New(ctx, redisClient, key)
+	lock := New(redisClient, key)
 
-	err := lock.Lock()
+	err := lock.Lock(ctx)
 	if err != nil {
 		t.Errorf("任务1：Lock() returned unexpected error: %v", err)
 		return
 	}
-	defer lock.UnLock()
+	defer lock.UnLock(ctx)
 
-	err = lock.Lock()
+	err = lock.Lock(ctx)
 	if err != nil {
 		t.Errorf("任务2：Lock() returned unexpected error: %v", err)
 		return
 	}
-	defer lock.UnLock()
+	defer lock.UnLock(ctx)
 }
 
 // 测试锁自动续期
@@ -154,13 +154,13 @@ func TestSevAutoRenewSuccess(t *testing.T) {
 	// 线程1
 	go func() {
 		defer wg.Done()
-		lock := New(ctx, redisClient, key, WithToken(token), WithAutoRenew())
-		err := lock.Lock()
+		lock := New(redisClient, key, WithToken(token), WithAutoRenew())
+		err := lock.Lock(ctx)
 		if err != nil {
 			t.Errorf("Lock() returned unexpected error: %v", err)
 			return
 		}
-		defer lock.UnLock()
+		defer lock.UnLock(ctx)
 
 		log.Println("线程1：自旋锁加锁成功")
 		time.Sleep(time.Second * 10)
@@ -172,10 +172,10 @@ func TestSevAutoRenewSuccess(t *testing.T) {
 		defer wg.Done()
 		time.Sleep(time.Second * 7)
 		log.Println("线程2：开始抢夺锁资源")
-		lock := New(ctx, redisClient, key, WithToken(token2), WithAutoRenew())
-		err := lock.Lock()
+		lock := New(redisClient, key, WithToken(token2), WithAutoRenew())
+		err := lock.Lock(ctx)
 		if err == nil {
-			defer lock.UnLock()
+			defer lock.UnLock(ctx)
 			t.Errorf("线程2 Lock() not expectation success")
 			return
 		}
@@ -190,11 +190,14 @@ func TestAutoRenew5(t *testing.T) {
 		log.Println("Github actions skip this test")
 		return
 	}
-	lock := New(context.TODO(), redisClient, "key", WithToken("token"),
+
+	ctx := context.Background()
+
+	lock := New(redisClient, "key", WithToken("token"),
 		WithAutoRenew())
-	err := lock.Lock()
+	err := lock.Lock(ctx)
 	require.NoError(t, err)
-	defer lock.UnLock()
+	defer lock.UnLock(ctx)
 
 	time.Sleep(time.Second * 20)
 }

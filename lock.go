@@ -17,46 +17,44 @@ type RedisInter interface {
 type RedisLockInter interface {
 	// Lock tries to acquire a standard lock.
 	// Lock 尝试获取普通锁。
-	Lock() error
+	Lock(ctx context.Context) error
 
 	// SpinLock keeps trying to acquire the lock until timeout.
 	// SpinLock 在指定超时时间内不断尝试加锁。
-	SpinLock(timeout time.Duration) error
+	SpinLock(ctx context.Context, timeout time.Duration) error
 
 	// UnLock releases the standard lock.
 	// UnLock 释放普通锁。
-	UnLock() error
+	UnLock(ctx context.Context) error
 
 	// Renew manually extends the lock expiration.
 	// Renew 手动延长锁的有效期。
-	Renew() error
+	Renew(ctx context.Context) error
 
 	// FairLock tries to acquire a fair lock using the given requestId.
 	// 公平锁加锁：使用指定的 requestId 获取公平锁。
-	FairLock(requestId string) error
+	FairLock(ctx context.Context, requestId string) error
 
 	// SpinFairLock keeps trying to acquire a fair lock until timeout.
 	// SpinFairLock 在指定超时时间内不断尝试获取公平锁。
-	SpinFairLock(requestId string, timeout time.Duration) error
+	SpinFairLock(ctx context.Context, requestId string, timeout time.Duration) error
 
 	// FairUnLock releases the fair lock held by the given requestId.
 	// FairUnLock 根据 requestId 释放公平锁。
-	FairUnLock(requestId string) error
+	FairUnLock(ctx context.Context, requestId string) error
 
 	// FairRenew manually extends the expiration of a fair lock.
 	// FairRenew 手动延长指定 requestId 的公平锁有效期。
-	FairRenew(requestId string) error
+	FairRenew(ctx context.Context, requestId string) error
 }
 
 type RedisLock struct {
-	ctx             context.Context
 	redis           RedisInter
 	key             string
 	token           string
 	lockTimeout     time.Duration
 	isAutoRenew     bool
 	requestTimeout  time.Duration
-	autoRenewCtx    context.Context
 	autoRenewCancel context.CancelFunc
 }
 
@@ -75,13 +73,11 @@ type Option func(lock *RedisLock)
 // 如果未通过 WithToken 提供令牌，则将自动生成一个唯一的令牌，最终返回 RedisLockInter 的一个实现
 //
 // 参数：
-// - ctx：用于锁定操作和取消的上下文
 // - redisClient：实现 RedisInter 的抽象 Redis 客户端
 // - lockKey：用于锁定的 Redis 键
 // - options：可选配置项，如超时时间、自动续期等
-func New(ctx context.Context, redisClient RedisInter, lockKey string, options ...Option) RedisLockInter {
+func New(redisClient RedisInter, lockKey string, options ...Option) RedisLockInter {
 	lock := &RedisLock{
-		ctx:            ctx,
 		redis:          redisClient,
 		lockTimeout:    lockTime,       // 锁默认超时时间
 		requestTimeout: requestTimeout, // 公平锁在队列中的最大等待时间
