@@ -19,7 +19,7 @@ var (
 
 // Lock 可重入锁加锁
 func (l *RedisLock) Lock() error {
-	result, err := l.redis.Eval(l.Context, reentrantLockScript,
+	result, err := l.redis.Eval(l.ctx, reentrantLockScript,
 		[]string{l.key},
 		l.token,
 		l.lockTimeout.Milliseconds(),
@@ -33,7 +33,7 @@ func (l *RedisLock) Lock() error {
 	}
 
 	if l.isAutoRenew {
-		l.autoRenewCtx, l.autoRenewCancel = context.WithCancel(l.Context)
+		l.autoRenewCtx, l.autoRenewCancel = context.WithCancel(l.ctx)
 		go l.autoRenew()
 	}
 
@@ -48,7 +48,7 @@ func (l *RedisLock) UnLock() error {
 	}
 
 	result, err := l.redis.Eval(
-		l.Context,
+		l.ctx,
 		reentrantUnLockScript,
 		[]string{l.key}, l.token,
 	).Int64()
@@ -78,7 +78,7 @@ func (l *RedisLock) SpinLock(timeout time.Duration) error {
 
 		// 如果加锁失败，则休眠一段时间再尝试
 		select {
-		case <-l.Context.Done():
+		case <-l.ctx.Done():
 			return errors.Join(ErrSpinLockDone, context.Canceled) // 处理取消操作
 		case <-time.After(100 * time.Millisecond):
 			// 继续尝试下一轮加锁
@@ -89,7 +89,7 @@ func (l *RedisLock) SpinLock(timeout time.Duration) error {
 // Renew 锁手动续期
 func (l *RedisLock) Renew() error {
 	res, err := l.redis.Eval(
-		l.Context,
+		l.ctx,
 		reentrantRenewScript,
 		[]string{l.key},
 		l.token,
