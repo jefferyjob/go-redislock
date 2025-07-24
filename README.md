@@ -70,22 +70,22 @@ func main() {
 ```go
 type RedisLockInter interface {
     // Lock Locking
-    Lock() error
+    Lock(ctx context.Context) error
     // SpinLock Spinlock
-    SpinLock(timeout time.Duration) error
+    SpinLock(ctx context.Context, timeout time.Duration) error
     // UnLock Unlocking
-    UnLock() error
+    UnLock(ctx context.Context) error
     // Renew Manual renewal
-    Renew() error
+    Renew(ctx context.Context) error
     
     // FairLock Fair lock locking
-    FairLock(requestId string) error
+    FairLock(ctx context.Context, requestId string) error
     // SpinFairLock Spin Fair Lock
-    SpinFairLock(requestId string, timeout time.Duration) error
+    SpinFairLock(ctx context.Context, requestId string, timeout time.Duration) error
     // FairUnLock Fair Lock Unlock
-    FairUnLock(requestId string) error
+    FairUnLock(ctx context.Context, requestId string) error
     // FairRenew Fair Lock Renew
-    FairRenew(requestId string) error
+    FairRenew(ctx context.Context, requestId string) error
 }
 ```
 

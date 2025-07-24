@@ -15,8 +15,12 @@ type RedisInter interface {
 // RedisLockInter defines the interface for distributed Redis locks
 // RedisLockInter 定义了 Redis 分布式锁的接口
 type RedisLockInter interface {
+
 	// Lock tries to acquire a standard lock.
+	// This implementation supports "reentrant locks". If the lock is currently held by the same key+token, reentry is allowed and the count is increased. Unlock() needs to be called a corresponding number of times to release the lock.
+	//
 	// Lock 尝试获取普通锁。
+	// 该实现支持“可重入锁”，如果当前已由相同 key+token 持有，允许重入并增加计数。需调用相应次数 Unlock() 释放
 	Lock(ctx context.Context) error
 
 	// SpinLock keeps trying to acquire the lock until timeout.
@@ -24,7 +28,10 @@ type RedisLockInter interface {
 	SpinLock(ctx context.Context, timeout time.Duration) error
 
 	// UnLock releases the standard lock.
+	// If it is a reentrant lock, each call will reduce the holding count until the count reaches 0 and the lock will be released.
+	//
 	// UnLock 释放普通锁。
+	// 如果为重入锁，每调用一次减少一次持有计数，直到计数为 0 锁会被释放
 	UnLock(ctx context.Context) error
 
 	// Renew manually extends the lock expiration.
