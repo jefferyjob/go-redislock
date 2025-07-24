@@ -32,30 +32,34 @@ import (
 )
 
 func main() {
-    // Create a Redis client
-    redisClient := redis.NewClient(&redis.Options{
-        Addr:     "localhost:6379",
-    })
+	// Create a Redis client
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
 
-    // Create a context for canceling lock operations
-    ctx := context.Background()
+	// Create a Redis client adapter
+	// Note: Use different adapters according to different redis client packages
+	rdbAdapter := redislock.NewRedisV9Adapter(rdb)
 
-    // Create a RedisLock object
-    lock := redislock.New(redisClient, "test_key")
+	// Create a context for canceling lock operations
+	ctx := context.Background()
 
-    // acquire lock
-    err := lock.Lock(ctx)
-    if err != nil {
-        fmt.Println("lock acquisition failed：", err)
-        return
-    }
-    defer lock.UnLock(ctx) // unlock
+	// Create a RedisLock object
+	lock := redislock.New(rdbAdapter, "test_key")
 
-    // Perform tasks during lockdown
-    // ...
+	// acquire lock
+	err := lock.Lock(ctx)
+	if err != nil {
+		fmt.Println("lock acquisition failed：", err)
+		return
+	}
+	defer lock.UnLock(ctx) // unlock
 
-    fmt.Println("task execution completed")
+	// Perform tasks during lockdown
+	// ...
+	fmt.Println("task execution completed")
 }
+
 ```
 
 ### Configuration options

@@ -32,29 +32,32 @@ import (
 )
 
 func main() {
-    // 创建 Redis 客户端
-    redisClient := redis.NewClient(&redis.Options{
-        Addr:     "localhost:6379",
-    })
+	// 创建 Redis 客户端
+	rdb := redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	})
 
-    // 创建一个上下文，用于取消锁操作
-    ctx := context.Background()
+	// 创建 Redis 客户端适配器
+	// 注意：根据不同的 Redis 客户端包使用不同的适配器
+	rdbAdapter := redislock.NewRedisV9Adapter(rdb)
 
-    // 创建 RedisLock 对象
-    lock := redislock.New(redisClient, "test_key")
+	// 创建用于取消锁定操作的上下文
+	ctx := context.Background()
 
-    // 获取锁
-    err := lock.Lock(ctx)
-    if err != nil {
-        fmt.Println("锁获取失败：", err)
-        return
-    }
-    defer lock.UnLock(ctx) // 解锁
+	// 创建 RedisLock 对象
+	lock := redislock.New(rdbAdapter, "test_key")
 
-    // 在锁定期间执行任务
-    // ...
+	// 获取锁
+	err := lock.Lock(ctx)
+	if err != nil {
+		fmt.Println("lock获取失败：", err)
+		return
+	}
+	defer lock.UnLock(ctx) // 解锁
 
-    fmt.Println("任务执行完成")
+	// 锁定期间执行任务
+	// ...
+	fmt.Println("任务执行完成")
 }
 ```
 
