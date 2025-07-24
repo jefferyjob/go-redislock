@@ -15,14 +15,14 @@ import (
 func TestRedisLock_Lock(t *testing.T) {
 	testCases := []struct {
 		name       string
-		mock       func(t *testing.T) *redis.Client
+		mock       func(t *testing.T, ctx context.Context) *redis.Client
 		inputKey   string
 		inputToken string
 		wantErr    error
 	}{
 		{
 			name: "加锁成功",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetVal(int64(1))
@@ -34,7 +34,7 @@ func TestRedisLock_Lock(t *testing.T) {
 		},
 		{
 			name: "加锁内部异常",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetErr(ErrException)
@@ -46,7 +46,7 @@ func TestRedisLock_Lock(t *testing.T) {
 		},
 		{
 			name: "加锁失败",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetVal(int64(0))
@@ -60,8 +60,10 @@ func TestRedisLock_Lock(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			lock := New(context.TODO(), tc.mock(t), tc.inputKey, WithToken(tc.inputToken))
-			err := lock.Lock()
+			ctx := context.Background()
+
+			lock := New(tc.mock(t, ctx), tc.inputKey, WithToken(tc.inputToken))
+			err := lock.Lock(ctx)
 			if !errors.Is(err, tc.wantErr) {
 				t.Errorf("expected error %v, got %v", tc.wantErr, err)
 			}
@@ -72,16 +74,16 @@ func TestRedisLock_Lock(t *testing.T) {
 func TestRedisLock_UnLock(t *testing.T) {
 	testCases := []struct {
 		name       string
-		before     func(t *testing.T, lock RedisLockInter)
-		after      func(t *testing.T, lock RedisLockInter)
-		mock       func(t *testing.T) *redis.Client
+		before     func(t *testing.T, ctx context.Context, lock RedisLockInter)
+		after      func(t *testing.T, ctx context.Context, lock RedisLockInter)
+		mock       func(t *testing.T, ctx context.Context) *redis.Client
 		inputKey   string
 		inputToken string
 		wantErr    error
 	}{
 		{
 			name: "解锁成功",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetVal(int64(1))
@@ -89,11 +91,11 @@ func TestRedisLock_UnLock(t *testing.T) {
 					SetVal(int64(1))
 				return db
 			},
-			before: func(t *testing.T, lock RedisLockInter) {
-				err := lock.Lock()
+			before: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+				err := lock.Lock(ctx)
 				require.NoError(t, err)
 			},
-			after: func(t *testing.T, lock RedisLockInter) {
+			after: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
 			},
 			inputKey:   "key",
 			inputToken: "token",
@@ -101,7 +103,7 @@ func TestRedisLock_UnLock(t *testing.T) {
 		},
 		{
 			name: "解锁内部异常",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetVal(int64(1))
@@ -109,11 +111,11 @@ func TestRedisLock_UnLock(t *testing.T) {
 					SetErr(ErrException)
 				return db
 			},
-			before: func(t *testing.T, lock RedisLockInter) {
-				err := lock.Lock()
+			before: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+				err := lock.Lock(ctx)
 				require.NoError(t, err)
 			},
-			after: func(t *testing.T, lock RedisLockInter) {
+			after: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
 			},
 			inputKey:   "key",
 			inputToken: "token",
@@ -121,7 +123,7 @@ func TestRedisLock_UnLock(t *testing.T) {
 		},
 		{
 			name: "解锁失败",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetVal(int64(1))
@@ -129,11 +131,11 @@ func TestRedisLock_UnLock(t *testing.T) {
 					SetVal(int64(0))
 				return db
 			},
-			before: func(t *testing.T, lock RedisLockInter) {
-				err := lock.Lock()
+			before: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+				err := lock.Lock(ctx)
 				require.NoError(t, err)
 			},
-			after: func(t *testing.T, lock RedisLockInter) {
+			after: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
 			},
 			inputKey:   "key",
 			inputToken: "token",
@@ -143,16 +145,18 @@ func TestRedisLock_UnLock(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			lock := New(context.TODO(), tc.mock(t), tc.inputKey, WithToken(tc.inputToken))
+			ctx := context.Background()
 
-			tc.before(t, lock)
+			lock := New(tc.mock(t, ctx), tc.inputKey, WithToken(tc.inputToken))
 
-			err := lock.UnLock()
+			tc.before(t, ctx, lock)
+
+			err := lock.UnLock(ctx)
 			if !errors.Is(err, tc.wantErr) {
 				t.Errorf("expected error %v, got %v", tc.wantErr, err)
 			}
 
-			tc.after(t, lock)
+			tc.after(t, ctx, lock)
 		})
 	}
 }
@@ -160,7 +164,7 @@ func TestRedisLock_UnLock(t *testing.T) {
 func TestRedisLock_SpinLock(t *testing.T) {
 	testCases := []struct {
 		name         string
-		mock         func(t *testing.T) *redis.Client
+		mock         func(t *testing.T, ctx context.Context) *redis.Client
 		before       func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
 		after        func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
 		inputKey     string
@@ -170,7 +174,7 @@ func TestRedisLock_SpinLock(t *testing.T) {
 	}{
 		{
 			name: "自旋锁-加锁成功",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetVal(int64(1))
@@ -189,7 +193,7 @@ func TestRedisLock_SpinLock(t *testing.T) {
 		},
 		{
 			name: "自旋锁-加锁超时",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetVal(int64(1))
@@ -197,9 +201,9 @@ func TestRedisLock_SpinLock(t *testing.T) {
 			},
 			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
 				go func() {
-					err := lock.Lock()
+					err := lock.Lock(ctx)
 					require.NoError(t, err)
-					defer lock.UnLock()
+					defer lock.UnLock(ctx)
 					time.Sleep(time.Second * 6) // 模拟业务执行实行
 				}()
 				time.Sleep(time.Second * 1) // 确保协程加锁成功
@@ -214,7 +218,7 @@ func TestRedisLock_SpinLock(t *testing.T) {
 		},
 		{
 			name: "自旋锁-Ctx取消",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetVal(int64(1))
@@ -222,9 +226,9 @@ func TestRedisLock_SpinLock(t *testing.T) {
 			},
 			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
 				go func() {
-					err := lock.Lock()
+					err := lock.Lock(ctx)
 					require.NoError(t, err)
-					defer lock.UnLock()
+					defer lock.UnLock(ctx)
 					time.Sleep(time.Second * 6) // 模拟业务执行实行
 				}()
 				go func() {
@@ -246,11 +250,11 @@ func TestRedisLock_SpinLock(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
-			lock := New(ctx, tc.mock(t), tc.inputKey, WithToken(tc.inputToken))
+			lock := New(tc.mock(t, ctx), tc.inputKey, WithToken(tc.inputToken))
 
 			tc.before(t, ctx, cancel, lock)
 
-			err := lock.SpinLock(tc.inputTimeout)
+			err := lock.SpinLock(ctx, tc.inputTimeout)
 			if !errors.Is(err, tc.wantErr) {
 				t.Errorf("expected error %v, got %v", tc.wantErr, err)
 			}
@@ -263,9 +267,9 @@ func TestRedisLock_SpinLock(t *testing.T) {
 func TestRedisLock_LockRenew(t *testing.T) {
 	testCases := []struct {
 		name       string
-		mock       func(t *testing.T) *redis.Client
-		before     func(t *testing.T, lock RedisLockInter)
-		after      func(t *testing.T, lock RedisLockInter)
+		mock       func(t *testing.T, ctx context.Context) *redis.Client
+		before     func(t *testing.T, ctx context.Context, lock RedisLockInter)
+		after      func(t *testing.T, ctx context.Context, lock RedisLockInter)
 		inputKey   string
 		inputToken string
 		inputSleep time.Duration // 模拟业务执行时间
@@ -273,7 +277,7 @@ func TestRedisLock_LockRenew(t *testing.T) {
 	}{
 		{
 			name: "锁手动续期成功",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetVal(int64(1))
@@ -281,10 +285,10 @@ func TestRedisLock_LockRenew(t *testing.T) {
 					SetVal(int64(1))
 				return db
 			},
-			before: func(t *testing.T, lock RedisLockInter) {
+			before: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
 			},
-			after: func(t *testing.T, lock RedisLockInter) {
-				_ = lock.UnLock()
+			after: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+				_ = lock.UnLock(ctx)
 			},
 			inputKey:   "key",
 			inputToken: "token",
@@ -293,7 +297,7 @@ func TestRedisLock_LockRenew(t *testing.T) {
 		},
 		{
 			name: "锁手动续期异常",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetVal(int64(1))
@@ -301,10 +305,10 @@ func TestRedisLock_LockRenew(t *testing.T) {
 					SetErr(ErrException)
 				return db
 			},
-			before: func(t *testing.T, lock RedisLockInter) {
+			before: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
 			},
-			after: func(t *testing.T, lock RedisLockInter) {
-				_ = lock.UnLock()
+			after: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+				_ = lock.UnLock(ctx)
 			},
 			inputKey:   "key",
 			inputToken: "token",
@@ -313,7 +317,7 @@ func TestRedisLock_LockRenew(t *testing.T) {
 		},
 		{
 			name: "锁手动续期失败",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetVal(int64(1))
@@ -321,10 +325,10 @@ func TestRedisLock_LockRenew(t *testing.T) {
 					SetVal(int64(0))
 				return db
 			},
-			before: func(t *testing.T, lock RedisLockInter) {
+			before: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
 			},
-			after: func(t *testing.T, lock RedisLockInter) {
-				_ = lock.UnLock()
+			after: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+				_ = lock.UnLock(ctx)
 			},
 			inputKey:   "key",
 			inputToken: "token",
@@ -335,16 +339,18 @@ func TestRedisLock_LockRenew(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			lock := New(context.TODO(), tc.mock(t), tc.inputKey, WithToken(tc.inputToken))
-			tc.before(t, lock)
+			ctx := context.Background()
 
-			err := lock.Lock()
+			lock := New(tc.mock(t, ctx), tc.inputKey, WithToken(tc.inputToken))
+			tc.before(t, ctx, lock)
+
+			err := lock.Lock(ctx)
 			require.NoError(t, err)
 
 			// 第6秒，手动续期
 			go func() {
 				time.Sleep(time.Second * 6)
-				errRenew := lock.Renew()
+				errRenew := lock.Renew(ctx)
 				if !errors.Is(errRenew, tc.wantErr) {
 					fmt.Printf("测试用：%s, 续期错误：%v, 想要的错误：%v \n", tc.name, errRenew, tc.wantErr)
 					t.Errorf("expected error %v, got %v", tc.wantErr, err)
@@ -353,7 +359,7 @@ func TestRedisLock_LockRenew(t *testing.T) {
 
 			time.Sleep(tc.inputSleep) // 模拟业务执行时间
 
-			tc.after(t, lock)
+			tc.after(t, ctx, lock)
 		})
 	}
 }
@@ -361,7 +367,7 @@ func TestRedisLock_LockRenew(t *testing.T) {
 func TestRedisLock_LockAutoRenew(t *testing.T) {
 	testCases := []struct {
 		name       string
-		mock       func(t *testing.T) *redis.Client
+		mock       func(t *testing.T, ctx context.Context) *redis.Client
 		before     func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
 		after      func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter)
 		inputKey   string
@@ -371,7 +377,7 @@ func TestRedisLock_LockAutoRenew(t *testing.T) {
 	}{
 		{
 			name: "锁自动续期成功",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetVal(int64(1))
@@ -382,7 +388,7 @@ func TestRedisLock_LockAutoRenew(t *testing.T) {
 			before: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
 			},
 			after: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
-				_ = lock.UnLock()
+				_ = lock.UnLock(ctx)
 			},
 			inputKey:   "key",
 			inputToken: "token",
@@ -391,7 +397,7 @@ func TestRedisLock_LockAutoRenew(t *testing.T) {
 		},
 		{
 			name: "锁自动续期-Ctx取消",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", lockTime.Milliseconds()).
 					SetVal(int64(1))
@@ -406,7 +412,7 @@ func TestRedisLock_LockAutoRenew(t *testing.T) {
 				}()
 			},
 			after: func(t *testing.T, ctx context.Context, cancel context.CancelFunc, lock RedisLockInter) {
-				_ = lock.UnLock()
+				_ = lock.UnLock(ctx)
 			},
 			inputKey:   "key",
 			inputToken: "token",
@@ -419,13 +425,13 @@ func TestRedisLock_LockAutoRenew(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
 
-			lock := New(ctx, tc.mock(t), tc.inputKey,
+			lock := New(tc.mock(t, ctx), tc.inputKey,
 				WithToken(tc.inputToken),
 				WithAutoRenew(),
 			)
 			tc.before(t, ctx, cancel, lock)
 
-			err := lock.Lock()
+			err := lock.Lock(ctx)
 			require.NoError(t, err)
 			time.Sleep(tc.inputSleep) // 模拟业务执行时间
 
@@ -437,9 +443,9 @@ func TestRedisLock_LockAutoRenew(t *testing.T) {
 func TestRedisLock_LockTimeout(t *testing.T) {
 	testCases := []struct {
 		name             string
-		before           func(t *testing.T, lock RedisLockInter)
-		after            func(t *testing.T, lock RedisLockInter)
-		mock             func(t *testing.T) *redis.Client
+		before           func(t *testing.T, ctx context.Context, lock RedisLockInter)
+		after            func(t *testing.T, ctx context.Context, lock RedisLockInter)
+		mock             func(t *testing.T, ctx context.Context) *redis.Client
 		inputWithTimeout time.Duration
 		inputKey         string
 		inputToken       string
@@ -448,7 +454,7 @@ func TestRedisLock_LockTimeout(t *testing.T) {
 	}{
 		{
 			name: "加锁成功",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				// 第一次加锁
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", (time.Second * 2).Milliseconds()).
@@ -465,16 +471,16 @@ func TestRedisLock_LockTimeout(t *testing.T) {
 					SetVal(int64(1))
 				return db
 			},
-			before: func(t *testing.T, lock RedisLockInter) {
+			before: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
 				go func() {
-					err := lock.Lock()
+					err := lock.Lock(ctx)
 					require.NoError(t, err)
-					defer lock.UnLock()
+					defer lock.UnLock(ctx)
 					time.Sleep(time.Second * 2)
 				}()
 			},
-			after: func(t *testing.T, lock RedisLockInter) {
-				_ = lock.UnLock()
+			after: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+				_ = lock.UnLock(ctx)
 			},
 			inputKey:         "key",
 			inputToken:       "token",
@@ -484,7 +490,7 @@ func TestRedisLock_LockTimeout(t *testing.T) {
 		},
 		{
 			name: "加锁失败",
-			mock: func(t *testing.T) *redis.Client {
+			mock: func(t *testing.T, ctx context.Context) *redis.Client {
 				db, mock := redismock.NewClientMock()
 				// 第一次加锁
 				mock.ExpectEval(reentrantLockScript, []string{"key"}, "token", (time.Second * 5).Milliseconds()).
@@ -501,16 +507,16 @@ func TestRedisLock_LockTimeout(t *testing.T) {
 					SetVal(int64(1))
 				return db
 			},
-			before: func(t *testing.T, lock RedisLockInter) {
+			before: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
 				go func() {
-					err := lock.Lock()
+					err := lock.Lock(ctx)
 					require.NoError(t, err)
-					defer lock.UnLock()
+					defer lock.UnLock(ctx)
 					time.Sleep(time.Second * 5)
 				}()
 			},
-			after: func(t *testing.T, lock RedisLockInter) {
-				_ = lock.UnLock()
+			after: func(t *testing.T, ctx context.Context, lock RedisLockInter) {
+				_ = lock.UnLock(ctx)
 			},
 			inputKey:         "key",
 			inputToken:       "token",
@@ -522,19 +528,21 @@ func TestRedisLock_LockTimeout(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			lock := New(context.TODO(), tc.mock(t), tc.inputKey,
+			ctx := context.Background()
+
+			lock := New(tc.mock(t, ctx), tc.inputKey,
 				WithToken(tc.inputToken),
 				WithTimeout(tc.inputWithTimeout),
 			)
 
-			tc.before(t, lock)
+			tc.before(t, ctx, lock)
 
 			time.Sleep(tc.inputSleep)
 
-			err := lock.Lock()
+			err := lock.Lock(ctx)
 			assert.Equal(t, tc.wantErr, err)
 
-			tc.after(t, lock)
+			tc.after(t, ctx, lock)
 		})
 	}
 }

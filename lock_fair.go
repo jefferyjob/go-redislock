@@ -20,8 +20,8 @@ var (
 // FairLock 公平锁尝试加锁
 // 公平锁确保请求按照顺序获取锁，避免饥饿现象
 // 如果是队首且成功获取锁则返回 nil，否则返回 ErrLockFailed
-func (l *RedisLock) FairLock(requestId string) error {
-	result, err := l.redis.Eval(l.ctx, fairLockScript,
+func (l *RedisLock) FairLock(ctx context.Context, requestId string) error {
+	result, err := l.redis.Eval(ctx, fairLockScript,
 		[]string{l.key},
 		requestId,
 		l.lockTimeout.Milliseconds(),
@@ -38,15 +38,16 @@ func (l *RedisLock) FairLock(requestId string) error {
 	}
 
 	if l.isAutoRenew {
-		l.autoRenewCtx, l.autoRenewCancel = context.WithCancel(l.ctx)
-		go l.autoFairRenew(requestId)
+		ctxRenew, cancel := context.WithCancel(ctx)
+		l.autoRenewCancel = cancel
+		go l.autoFairRenew(ctxRenew, requestId)
 	}
 
 	return nil
 }
 
 // SpinFairLock 自旋公平锁
-func (l *RedisLock) SpinFairLock(requestId string, timeout time.Duration) error {
+func (l *RedisLock) SpinFairLock(ctx context.Context, requestId string, timeout time.Duration) error {
 	exp := time.Now().Add(timeout)
 	for {
 		// 检查自旋锁是否超时
@@ -55,13 +56,13 @@ func (l *RedisLock) SpinFairLock(requestId string, timeout time.Duration) error 
 		}
 
 		// 尝试公平锁锁成功
-		if err := l.FairLock(requestId); err == nil {
+		if err := l.FairLock(ctx, requestId); err == nil {
 			return nil
 		}
 
 		// 如果加锁失败，则休眠一段时间再尝试
 		select {
-		case <-l.ctx.Done(): // 检查上下文是否已取消
+		case <-ctx.Done(): // 检查上下文是否已取消
 			return errors.Join(ErrSpinLockDone, context.Canceled)
 		case <-time.After(100 * time.Millisecond):
 			// 继续尝试下一轮加锁
@@ -70,13 +71,13 @@ func (l *RedisLock) SpinFairLock(requestId string, timeout time.Duration) error 
 }
 
 // FairUnLock 公平锁解锁
-func (l *RedisLock) FairUnLock(requestId string) error {
+func (l *RedisLock) FairUnLock(ctx context.Context, requestId string) error {
 	if l.autoRenewCancel != nil {
 		l.autoRenewCancel()
 	}
 
 	result, err := l.redis.Eval(
-		l.ctx,
+		ctx,
 		fairUnLockScript,
 		[]string{l.key},
 		requestId,
@@ -94,9 +95,9 @@ func (l *RedisLock) FairUnLock(requestId string) error {
 }
 
 // FairRenew 公平锁手动续期
-func (l *RedisLock) FairRenew(requestId string) error {
+func (l *RedisLock) FairRenew(ctx context.Context, requestId string) error {
 	res, err := l.redis.Eval(
-		l.ctx,
+		ctx,
 		fairRenewScript,
 		[]string{l.key},
 		requestId,
@@ -115,16 +116,16 @@ func (l *RedisLock) FairRenew(requestId string) error {
 }
 
 // 锁自动续期
-func (l *RedisLock) autoFairRenew(requestId string) {
+func (l *RedisLock) autoFairRenew(ctx context.Context, requestId string) {
 	ticker := time.NewTicker(l.lockTimeout / 3)
 	defer ticker.Stop()
 
 	for {
 		select {
-		case <-l.autoRenewCtx.Done():
+		case <-ctx.Done():
 			return
 		case <-ticker.C:
-			err := l.FairRenew(requestId)
+			err := l.FairRenew(ctx, requestId)
 			if err != nil {
 				log.Printf("Error: autoFairRenew failed, Err: %v \n", err)
 				return

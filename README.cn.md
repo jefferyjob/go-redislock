@@ -35,23 +35,21 @@ func main() {
     // 创建 Redis 客户端
     redisClient := redis.NewClient(&redis.Options{
         Addr:     "localhost:6379",
-        Password: "",
-        DB:       0,
     })
 
     // 创建一个上下文，用于取消锁操作
     ctx := context.Background()
 
     // 创建 RedisLock 对象
-    lock := redislock.New(ctx, redisClient, "test_key")
+    lock := redislock.New(redisClient, "test_key")
 
     // 获取锁
-    err := lock.Lock()
+    err := lock.Lock(ctx)
     if err != nil {
         fmt.Println("锁获取失败：", err)
         return
     }
-    defer lock.UnLock() // 解锁
+    defer lock.UnLock(ctx) // 解锁
 
     // 在锁定期间执行任务
     // ...
@@ -72,27 +70,28 @@ func main() {
 ```go
 type RedisLockInter interface {
 	// Lock 加锁
-	Lock() error
+	Lock(ctx context.Context) error
 	// SpinLock 自旋锁
-	SpinLock(timeout time.Duration) error
+	SpinLock(ctx context.Context, timeout time.Duration) error
 	// UnLock 解锁
-	UnLock() error
+	UnLock(ctx context.Context) error
 	// Renew 手动续期
-	Renew() error
+	Renew(ctx context.Context) error
 
 	// FairLock 公平锁加锁
-	FairLock(requestId string) error
+	FairLock(ctx context.Context, requestId string) error
 	// SpinFairLock 自旋公平锁
-	SpinFairLock(requestId string, timeout time.Duration) error
+	SpinFairLock(ctx context.Context, requestId string, timeout time.Duration) error
 	// FairUnLock 公平锁解锁
-	FairUnLock(requestId string) error
+	FairUnLock(ctx context.Context, requestId string) error
 	// FairRenew 公平锁续期
-	FairRenew(requestId string) error
+	FairRenew(ctx context.Context, requestId string) error
 }
 ```
 
 
 ## 注意事项
+- 每次加锁都创建一个新的 `RedisLock` 实例。
 - 请确保您的 Redis 服务器设置正确，并且能够正常连接和运行。
 - 在使用自动续约功能时，确保在任务执行期间没有出现长时间的阻塞，以免导致续约失败。
 - 考虑使用适当的超时设置，以避免由于网络问题等原因导致死锁。

@@ -35,23 +35,21 @@ func main() {
     // Create a Redis client
     redisClient := redis.NewClient(&redis.Options{
         Addr:     "localhost:6379",
-        Password: "",
-        DB:       0,
     })
 
     // Create a context for canceling lock operations
     ctx := context.Background()
 
     // Create a RedisLock object
-    lock := redislock.New(ctx, redisClient, "test_key")
+    lock := redislock.New(redisClient, "test_key")
 
     // acquire lock
-    err := lock.Lock()
+    err := lock.Lock(ctx)
     if err != nil {
         fmt.Println("lock acquisition failed：", err)
         return
     }
-    defer lock.UnLock() // unlock
+    defer lock.UnLock(ctx) // unlock
 
     // Perform tasks during lockdown
     // ...
@@ -72,27 +70,28 @@ func main() {
 ```go
 type RedisLockInter interface {
     // Lock Locking
-    Lock() error
+    Lock(ctx context.Context) error
     // SpinLock Spinlock
-    SpinLock(timeout time.Duration) error
+    SpinLock(ctx context.Context, timeout time.Duration) error
     // UnLock Unlocking
-    UnLock() error
+    UnLock(ctx context.Context) error
     // Renew Manual renewal
-    Renew() error
+    Renew(ctx context.Context) error
     
     // FairLock Fair lock locking
-    FairLock(requestId string) error
+    FairLock(ctx context.Context, requestId string) error
     // SpinFairLock Spin Fair Lock
-    SpinFairLock(requestId string, timeout time.Duration) error
+    SpinFairLock(ctx context.Context, requestId string, timeout time.Duration) error
     // FairUnLock Fair Lock Unlock
-    FairUnLock(requestId string) error
+    FairUnLock(ctx context.Context, requestId string) error
     // FairRenew Fair Lock Renew
-    FairRenew(requestId string) error
+    FairRenew(ctx context.Context, requestId string) error
 }
 ```
 
 
 ## Precautions
+- Create a new `RedisLock` instance each time you lock.
 - Please make sure your Redis server is set up correctly, connected and running properly.
 - When using the automatic renewal function, ensure that there is no long-term blocking during task execution, so as not to cause the renewal to fail.
 - Consider using appropriate timeout settings to avoid deadlocks due to network issues etc.
