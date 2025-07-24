@@ -49,7 +49,7 @@ type RedisLockInter interface {
 }
 
 type RedisLock struct {
-	context.Context
+	ctx             context.Context
 	redis           RedisInter
 	key             string
 	token           string
@@ -81,7 +81,7 @@ type Option func(lock *RedisLock)
 // - options：可选配置项，如超时时间、自动续期等
 func New(ctx context.Context, redisClient RedisInter, lockKey string, options ...Option) RedisLockInter {
 	lock := &RedisLock{
-		Context:        ctx,
+		ctx:            ctx,
 		redis:          redisClient,
 		lockTimeout:    lockTime,       // 锁默认超时时间
 		requestTimeout: requestTimeout, // 公平锁在队列中的最大等待时间
