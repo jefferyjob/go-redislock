@@ -16,33 +16,25 @@ import (
 // 你可以实用下面的命令启动一个redis容器进行测试
 // docker run -d -p 63790:6379 --name go_redis_lock redis
 // 注意：该服务在 GITHUB ACTIONS 并不会被测试
-func getRedisClient() *redis.Client {
+func getRedisClient() (RedisInter, *redis.Client) {
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
-		return nil
+		return nil, nil
 	}
 
 	if true {
-		return nil
+		return nil, nil
 	}
 
 	rdb := redis.NewClient(&redis.Options{
 		Addr: "127.0.0.1:63790",
 	})
+	rdbAdapter := NewRedisV9Adapter(rdb)
 
-	// 尝试执行PING命令
-	// 如果执行PING命令出错，则表明连接失败
-	ctx := context.TODO()
-	_, err := rdb.Ping(ctx).Result()
-	if err != nil {
-		log.Printf("Failed to ping Redis: %v", err)
-		return nil
-	}
-
-	return rdb
+	return rdbAdapter, rdb
 }
 
 func TestSevLock(t *testing.T) {
-	redisClient := getRedisClient()
+	redisClient, _ := getRedisClient()
 	if redisClient == nil {
 		log.Println("Github actions skip this test")
 		return
@@ -62,7 +54,7 @@ func TestSevLock(t *testing.T) {
 
 // 测试加锁成功
 func TestSevLockSuccess(t *testing.T) {
-	redisClient := getRedisClient()
+	redisClient, rdb := getRedisClient()
 	if redisClient == nil {
 		log.Println("Github actions skip this test")
 		return
@@ -93,7 +85,7 @@ func TestSevLockSuccess(t *testing.T) {
 		log.Println("线程二：开始抢夺锁资源")
 		lock := New(redisClient, key)
 
-		times, _ := redisClient.TTL(ctx, key).Result()
+		times, _ := rdb.TTL(ctx, key).Result()
 		log.Println("线程二：ttl 时间:", times.Milliseconds())
 
 		err := lock.Lock(ctx)
@@ -109,7 +101,7 @@ func TestSevLockSuccess(t *testing.T) {
 
 // 测试可重入锁计数器
 func TestSevLockCounter(t *testing.T) {
-	redisClient := getRedisClient()
+	redisClient, _ := getRedisClient()
 	if redisClient == nil {
 		log.Println("Github actions skip this test")
 		return
@@ -136,7 +128,7 @@ func TestSevLockCounter(t *testing.T) {
 
 // 测试锁自动续期
 func TestSevAutoRenewSuccess(t *testing.T) {
-	redisClient := getRedisClient()
+	redisClient, _ := getRedisClient()
 	if redisClient == nil {
 		log.Println("Github actions skip this test")
 		return
@@ -185,7 +177,7 @@ func TestSevAutoRenewSuccess(t *testing.T) {
 }
 
 func TestAutoRenew5(t *testing.T) {
-	redisClient := getRedisClient()
+	redisClient, _ := getRedisClient()
 	if redisClient == nil {
 		log.Println("Github actions skip this test")
 		return

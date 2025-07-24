@@ -4,13 +4,12 @@ import (
 	"context"
 	"fmt"
 	"github.com/google/uuid"
-	"github.com/redis/go-redis/v9"
 	"time"
 )
 
-type RedisInter interface {
-	redis.Scripter
-}
+// type RedisInter interface {
+// 	redis.Scripter
+// }
 
 // RedisLockInter defines the interface for distributed Redis locks
 // RedisLockInter 定义了 Redis 分布式锁的接口
