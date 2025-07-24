@@ -3,6 +3,7 @@ package go_redislock
 import (
 	"context"
 	"github.com/redis/go-redis/v9"
+	"testing"
 )
 
 // ----------------------------------------------------------------------------------------------
@@ -37,3 +38,23 @@ func (w *RedisMockCmdWrapper) Int64() (int64, error) {
 // ----------------------------------------------------------------------------------------------
 //  Redis Mock 适配器 End
 // ----------------------------------------------------------------------------------------------
+
+func TestRedisV9Adapter(t *testing.T) {
+
+}
+
+func TestRedisV8Adapter(t *testing.T) {
+
+}
+
+func TestRedisV7Adapter(t *testing.T) {
+
+}
+
+func TestGoZeroRedisAdapter(t *testing.T) {
+
+}
+
+func TestGoFrameRedisV2Adapter(t *testing.T) {
+
+}
