@@ -7,10 +7,6 @@ import (
 	"time"
 )
 
-// type RedisInter interface {
-// 	redis.Scripter
-// }
-
 // RedisLockInter defines the interface for distributed Redis locks
 // RedisLockInter 定义了 Redis 分布式锁的接口
 type RedisLockInter interface {
@@ -79,12 +75,12 @@ type Option func(lock *RedisLock)
 // 如果未通过 WithToken 提供令牌，则将自动生成一个唯一的令牌，最终返回 RedisLockInter 的一个实现
 //
 // 参数：
-// - redisClient：实现 RedisInter 的抽象 Redis 客户端
+// - rdb：实现 RedisInter 的抽象 Redis 客户端
 // - lockKey：用于锁定的 Redis 键
 // - options：可选配置项，如超时时间、自动续期等
-func New(redisClient RedisInter, lockKey string, options ...Option) RedisLockInter {
+func New(rdb RedisInter, lockKey string, options ...Option) RedisLockInter {
 	lock := &RedisLock{
-		redis:          redisClient,
+		redis:          rdb,
 		lockTimeout:    lockTime,       // 锁默认超时时间
 		requestTimeout: requestTimeout, // 公平锁在队列中的最大等待时间
 	}

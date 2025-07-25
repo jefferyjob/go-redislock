@@ -2,17 +2,14 @@ package go_redislock
 
 import (
 	"context"
-	"fmt"
-
 	v7 "github.com/go-redis/redis/v7"
 	v8 "github.com/go-redis/redis/v8"
 	v9 "github.com/redis/go-redis/v9"
-
-	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
-
-	gfRdbV2 "github.com/gogf/gf/v2/database/gredis"
-	gV2 "github.com/gogf/gf/v2/frame/g"
 )
+
+// type RedisInter interface {
+// 	redis.Scripter
+// }
 
 // RedisInter Redis 客户端接口
 type RedisInter interface {
@@ -42,22 +39,22 @@ type RedisCmd interface {
 // 返回值：
 //   - RedisInter 接口实例，封装了统一的 Eval 方法
 //   - error：若传入的客户端类型不受支持，则返回错误
-func NewRedisAdapter(rawClient interface{}) (RedisInter, error) {
-	switch client := rawClient.(type) {
-	case *v7.Client:
-		return NewRedisV7Adapter(client), nil
-	case *v8.Client:
-		return NewRedisV8Adapter(client), nil
-	case *v9.Client:
-		return NewRedisV9Adapter(client), nil
-	case *zeroRdb.Redis:
-		return NewGoZeroRdbAdapter(client), nil
-	case *gfRdbV2.Redis:
-		return NewGfRedisV2Adapter(client), nil
-	default:
-		return nil, fmt.Errorf("unsupported redis client type: %T", rawClient)
-	}
-}
+// func NewRedisAdapter(rawClient interface{}) (RedisInter, error) {
+// 	switch client := rawClient.(type) {
+// 	case *v7.Client:
+// 		return NewRedisV7Adapter(client), nil
+// 	case *v8.Client:
+// 		return NewRedisV8Adapter(client), nil
+// 	case *v9.Client:
+// 		return NewRedisV9Adapter(client), nil
+// 	case *zeroRdb.Redis:
+// 		return NewGoZeroRdbAdapter(client), nil
+// 	case *gfRdbV2.Redis:
+// 		return NewGfRedisV2Adapter(client), nil
+// 	default:
+// 		return nil, fmt.Errorf("unsupported redis client type: %T", rawClient)
+// 	}
+// }
 
 // ----------------------------------------------------------------------------------------------
 // Redis v9 Adapter
@@ -143,99 +140,99 @@ func (w *RedisV7CmdWrapper) Int64() (int64, error) {
 // ----------------------------------------------------------------------------------------------
 // go-zero Redis Adapter
 
-type GoZeroRdbAdapter struct {
-	client *zeroRdb.Redis
-}
-
-func NewGoZeroRdbAdapter(client *zeroRdb.Redis) RedisInter {
-	return &GoZeroRdbAdapter{client: client}
-}
-
-// Eval 通过 go-zero 的 EvalCtx 执行 Lua 脚本，结果由 GoZeroRdbCmdWrapper 封装
-func (r *GoZeroRdbAdapter) Eval(ctx context.Context, script string, keys []string, args ...interface{}) RedisCmd {
-	cmd, err := r.client.EvalCtx(ctx, script, keys, args...)
-	return &GoZeroRdbCmdWrapper{
-		cmd: cmd,
-		err: err,
-	}
-}
-
-type GoZeroRdbCmdWrapper struct {
-	cmd interface{}
-	err error
-}
-
-func (w *GoZeroRdbCmdWrapper) Result() (interface{}, error) {
-	if w.err != nil {
-		return nil, w.err
-	}
-	return w.cmd, nil
-}
-func (w *GoZeroRdbCmdWrapper) Int64() (int64, error) {
-	if w.err != nil {
-		return 0, w.err
-	}
-
-	switch v := w.cmd.(type) {
-	case int64:
-		return v, nil
-	case int:
-		return int64(v), nil
-	case string:
-		var i int64
-		_, err := fmt.Sscanf(v, "%d", &i)
-		return i, err
-	default:
-		return 0, fmt.Errorf("cannot convert result to int: %T", w.cmd)
-	}
-}
+// type GoZeroRdbAdapter struct {
+// 	client *zeroRdb.Redis
+// }
+//
+// func NewGoZeroRdbAdapter(client *zeroRdb.Redis) RedisInter {
+// 	return &GoZeroRdbAdapter{client: client}
+// }
+//
+// // Eval 通过 go-zero 的 EvalCtx 执行 Lua 脚本，结果由 GoZeroRdbCmdWrapper 封装
+// func (r *GoZeroRdbAdapter) Eval(ctx context.Context, script string, keys []string, args ...interface{}) RedisCmd {
+// 	cmd, err := r.client.EvalCtx(ctx, script, keys, args...)
+// 	return &GoZeroRdbCmdWrapper{
+// 		cmd: cmd,
+// 		err: err,
+// 	}
+// }
+//
+// type GoZeroRdbCmdWrapper struct {
+// 	cmd interface{}
+// 	err error
+// }
+//
+// func (w *GoZeroRdbCmdWrapper) Result() (interface{}, error) {
+// 	if w.err != nil {
+// 		return nil, w.err
+// 	}
+// 	return w.cmd, nil
+// }
+// func (w *GoZeroRdbCmdWrapper) Int64() (int64, error) {
+// 	if w.err != nil {
+// 		return 0, w.err
+// 	}
+//
+// 	switch v := w.cmd.(type) {
+// 	case int64:
+// 		return v, nil
+// 	case int:
+// 		return int64(v), nil
+// 	case string:
+// 		var i int64
+// 		_, err := fmt.Sscanf(v, "%d", &i)
+// 		return i, err
+// 	default:
+// 		return 0, fmt.Errorf("cannot convert result to int: %T", w.cmd)
+// 	}
+// }
 
 // ----------------------------------------------------------------------------------------------
 // GoFrame Redis (gredis) v2 Adapter
 
-type GfRedisV2Adapter struct {
-	client *gfRdbV2.Redis
-}
-
-func NewGfRedisV2Adapter(client *gfRdbV2.Redis) RedisInter {
-	return &GfRedisV2Adapter{client: client}
-}
-
-func (r *GfRedisV2Adapter) Eval(ctx context.Context, script string, keys []string, args ...interface{}) RedisCmd {
-	eval, err := r.client.Eval(ctx, script, int64(len(keys)), keys, args)
-	return &GfRedisV2CmdWrapper{
-		cmd: eval,
-		err: err,
-	}
-}
-
-type GfRedisV2CmdWrapper struct {
-	cmd *gV2.Var
-	err error
-}
-
-func (w *GfRedisV2CmdWrapper) Result() (interface{}, error) {
-	if w.err != nil {
-		return nil, w.err
-	}
-	return w.cmd.Val(), nil
-}
-
-func (w *GfRedisV2CmdWrapper) Int64() (int64, error) {
-	if w.err != nil {
-		return 0, w.err
-	}
-
-	switch v := w.cmd.Val().(type) {
-	case int64:
-		return v, nil
-	case int:
-		return int64(v), nil
-	case string:
-		var i int64
-		_, err := fmt.Sscanf(v, "%d", &i)
-		return i, err
-	default:
-		return 0, fmt.Errorf("cannot convert result to int: %T", w.cmd)
-	}
-}
+// type GfRedisV2Adapter struct {
+// 	client *gfRdbV2.Redis
+// }
+//
+// func NewGfRedisV2Adapter(client *gfRdbV2.Redis) RedisInter {
+// 	return &GfRedisV2Adapter{client: client}
+// }
+//
+// func (r *GfRedisV2Adapter) Eval(ctx context.Context, script string, keys []string, args ...interface{}) RedisCmd {
+// 	eval, err := r.client.Eval(ctx, script, int64(len(keys)), keys, args)
+// 	return &GfRedisV2CmdWrapper{
+// 		cmd: eval,
+// 		err: err,
+// 	}
+// }
+//
+// type GfRedisV2CmdWrapper struct {
+// 	cmd *gV2.Var
+// 	err error
+// }
+//
+// func (w *GfRedisV2CmdWrapper) Result() (interface{}, error) {
+// 	if w.err != nil {
+// 		return nil, w.err
+// 	}
+// 	return w.cmd.Val(), nil
+// }
+//
+// func (w *GfRedisV2CmdWrapper) Int64() (int64, error) {
+// 	if w.err != nil {
+// 		return 0, w.err
+// 	}
+//
+// 	switch v := w.cmd.Val().(type) {
+// 	case int64:
+// 		return v, nil
+// 	case int:
+// 		return int64(v), nil
+// 	case string:
+// 		var i int64
+// 		_, err := fmt.Sscanf(v, "%d", &i)
+// 		return i, err
+// 	default:
+// 		return 0, fmt.Errorf("cannot convert result to int: %T", w.cmd)
+// 	}
+// }
