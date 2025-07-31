@@ -3,6 +3,8 @@ package go_redislock
 import (
 	"context"
 	"fmt"
+	"log"
+	"runtime/debug"
 
 	v7 "github.com/go-redis/redis/v7"
 	v8 "github.com/go-redis/redis/v8"
@@ -60,20 +62,13 @@ func NewRedisAdapter(rawClient interface{}) (RedisInter, error) {
 }
 
 func MustNewRedisAdapter(rawClient interface{}) RedisInter {
-	switch client := rawClient.(type) {
-	case *v7.Client:
-		return NewRedisV7Adapter(client)
-	case *v8.Client:
-		return NewRedisV8Adapter(client)
-	case *v9.Client:
-		return NewRedisV9Adapter(client)
-	case *zeroRdb.Redis:
-		return NewGoZeroRdbAdapter(client)
-	case *gfRdbV2.Redis:
-		return NewGfRedisV2Adapter(client)
-	default:
-		panic(fmt.Sprintf("unsupported redis client type: %T", rawClient))
+	adapter, err := NewRedisAdapter(rawClient)
+	if err != nil {
+		msg := fmt.Sprintf("%+v\n\n%s", err.Error(), debug.Stack())
+		log.Println(msg)
+		panic(msg)
 	}
+	return adapter
 }
 
 // ----------------------------------------------------------------------------------------------
