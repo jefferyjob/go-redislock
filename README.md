@@ -14,7 +14,7 @@ English | [简体中文](README.cn.md)
 go-redislock is a library for Go that provides distributed lock functionality using Redis as the backend storage. Ensure data sharing and resource mutual exclusion under concurrent access in a distributed environment. Our distributed lock has the characteristics of reliability, high performance, timeout mechanism, reentrancy and flexible lock release method, which simplifies the use of distributed lock and allows you to focus on the realization of business logic.
 
 ## Redis client support
-go-redislock provides a highly scalable client adaptation mechanism, and has built-in support for the following mainstream Redis clients. For detailed examples, please refer to [examples](examples/redis_adapter) .
+go-redislock provides a highly scalable client adaptation mechanism, and has built-in support for the following mainstream Redis clients. For detailed examples, please refer to [examples](examples/adapter) .
 
 | Redis Client Version | Package path | Supported | Adapter method |
 |----------------------|--------------------------------------------------| -------- |-----------------------|
