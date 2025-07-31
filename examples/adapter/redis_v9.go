@@ -9,6 +9,7 @@ import (
 
 // RedisV9Lock 演示如何在官方 go-redis v9 客户端上使用 redislock 库
 func RedisV9Lock() {
+	// Initialize redis adapter (only once)
 	redisClient := redislock.NewRedisV9Adapter(v9.NewClient(&v9.Options{
 		Addr: "localhost:6379",
 	}))
