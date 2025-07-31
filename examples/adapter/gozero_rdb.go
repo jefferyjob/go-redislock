@@ -4,13 +4,15 @@ import (
 	"context"
 	"fmt"
 	redislock "github.com/jefferyjob/go-redislock"
-	"github.com/zeromicro/go-zero/core/stores/redis"
+	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
 )
 
 // GoZeroRedisLock 演示如何在 gozero 框架的 redis 客户端上使用 redislock 库
 func GoZeroRedisLock() {
-	redisClient := redislock.NewGoZeroRdbAdapter(redis.MustNewRedis(redis.RedisConf{
+	// Initialize redis adapter (only once)
+	redisClient := redislock.NewGoZeroRdbAdapter(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
 		Host: "localhost:6379",
+		Type: "node",
 	}))
 
 	// Create a context for canceling lock operations

@@ -2,8 +2,12 @@ package go_redislock
 
 import (
 	"context"
-	"github.com/redis/go-redis/v9"
+	"fmt"
+	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
+	gfRdbV2 "github.com/gogf/gf/v2/database/gredis"
+	v9 "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
+	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
 	"log"
 	"os"
 	"sync"
@@ -11,12 +15,17 @@ import (
 	"time"
 )
 
+var (
+	addr = "127.0.0.1"
+	port = "63790"
+)
+
 // Redis服务器测试
 // 下面的代码将借助 redis 服务器进行测试，可以更加方便的测试服务中的问题
 // 你可以实用下面的命令启动一个redis容器进行测试
 // docker run -d -p 63790:6379 --name go_redis_lock redis
 // 注意：该服务在 GITHUB ACTIONS 并不会被测试
-func getRedisClient() (RedisInter, *redis.Client) {
+func getRedisClient() (RedisInter, *v9.Client) {
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		return nil, nil
 	}
@@ -25,8 +34,8 @@ func getRedisClient() (RedisInter, *redis.Client) {
 	// 	return nil, nil
 	// }
 
-	rdb := redis.NewClient(&redis.Options{
-		Addr: "127.0.0.1:63790",
+	rdb := v9.NewClient(&v9.Options{
+		Addr: fmt.Sprintf("%s:%s", addr, port),
 	})
 	rdbAdapter := NewRedisV9Adapter(rdb)
 
@@ -190,7 +199,7 @@ func TestSevAutoRenewSuccess(t *testing.T) {
 
 // 展示自动续期流程
 // 可以在协程里清晰的看到每 1/3 的时间自动续期锁
-func TestAutoRenewList(t *testing.T) {
+func TestSevAutoRenewList(t *testing.T) {
 	redisClient, rdb := getRedisClient()
 	if redisClient == nil {
 		log.Println("Github actions skip this test")
@@ -218,4 +227,131 @@ func TestAutoRenewList(t *testing.T) {
 
 	// 模拟业务处理
 	time.Sleep(time.Second * 20)
+}
+
+// redis适配器测试
+func TestSevNewRedisAdapter(t *testing.T) {
+	redisClient, _ := getRedisClient()
+	if redisClient == nil {
+		log.Println("Github actions skip this test")
+		return
+	}
+
+	adapter := MustNewRedisAdapter(v9.NewClient(&v9.Options{
+		Addr: fmt.Sprintf("%s:%s", addr, port),
+	}))
+
+	ctx := context.Background()
+	key := "test_key"
+
+	// 线程2抢占锁资源-预期失败
+	go func() {
+		time.Sleep(time.Second * 1)
+		lock := New(adapter, key)
+		err := lock.Lock(ctx)
+		if err == nil {
+			t.Errorf("Lock() returned unexpected success: %v", err)
+			return
+		}
+		log.Println("线程2：抢占锁失败，锁已被其他线程占用")
+	}()
+
+	// 线程1加锁-预期成功
+	lock := New(adapter, key)
+	err := lock.Lock(ctx)
+	if err != nil {
+		t.Errorf("Lock() returned unexpected error: %v", err)
+		return
+	}
+	defer lock.UnLock(ctx)
+
+	// 模拟业务处理
+	log.Println("线程1：锁已获取，开始执行任务")
+	time.Sleep(time.Second * 5)
+}
+
+// go-zero 适配器测试
+func TestSevNewGoZeroRdbAdapter(t *testing.T) {
+	redisClient, _ := getRedisClient()
+	if redisClient == nil {
+		log.Println("Github actions skip this test")
+		return
+	}
+
+	adapter := NewGoZeroRdbAdapter(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
+		Host: fmt.Sprintf("%s:%s", addr, port),
+		Type: "node",
+	}))
+
+	ctx := context.Background()
+	key := "test_key"
+
+	// 线程2抢占锁资源-预期失败
+	go func() {
+		time.Sleep(time.Second * 1)
+		lock := New(adapter, key)
+		err := lock.Lock(ctx)
+		if err == nil {
+			t.Errorf("Lock() returned unexpected success: %v", err)
+			return
+		}
+		log.Println("线程2：抢占锁失败，锁已被其他线程占用")
+	}()
+
+	// 线程1加锁-预期成功
+	lock := New(adapter, key)
+	err := lock.Lock(ctx)
+	if err != nil {
+		t.Errorf("Lock() returned unexpected error: %v", err)
+		return
+	}
+	defer lock.UnLock(ctx)
+
+	// 模拟业务处理
+	log.Println("线程1：锁已获取，开始执行任务")
+	time.Sleep(time.Second * 5)
+}
+
+// gf v2 适配器测试
+func TestSevNewGfRedisV2Adapter(t *testing.T) {
+	redisClient, _ := getRedisClient()
+	if redisClient == nil {
+		log.Println("Github actions skip this test")
+		return
+	}
+
+	rdb, err := gfRdbV2.New(&gfRdbV2.Config{
+		Address: fmt.Sprintf("%s:%s", addr, port),
+	})
+	require.NoError(t, err)
+
+	adapter := NewGfRedisV2Adapter(rdb)
+
+	ctx := context.Background()
+	key := "test_key"
+
+	// 线程2抢占锁资源-预期失败
+	go func() {
+		time.Sleep(time.Second * 1)
+		lock := New(adapter, key)
+		err = lock.Lock(ctx)
+		if err == nil {
+			t.Errorf("Lock() returned unexpected success: %v", err)
+			return
+		}
+		log.Println("线程2：抢占锁失败，锁已被其他线程占用")
+	}()
+
+	// 线程1加锁-预期成功
+	lock := New(adapter, key)
+	err = lock.Lock(ctx)
+	if err != nil {
+		t.Errorf("Lock() returned unexpected error: %v", err)
+		return
+	}
+	defer lock.UnLock(ctx)
+
+	// 模拟业务处理
+	log.Println("线程1：锁已获取，开始执行任务")
+	time.Sleep(time.Second * 5)
 }

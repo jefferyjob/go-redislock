@@ -48,6 +48,8 @@ github.com/go-redis/redismock/v8 v8.11.5/go.mod h1:UaAU9dEe1C+eGr+FHV5prCWIt0haf
 github.com/go-redis/redismock/v9 v9.2.0 h1:ZrMYQeKPECZPjOj5u9eyOjg8Nnb0BS9lkVIZ6IpsKLw=
 github.com/go-redis/redismock/v9 v9.2.0/go.mod h1:18KHfGDK4Y6c2R0H38EUGWAdc7ZQS9gfYxc94k7rWT0=
 github.com/go-task/slim-sprig v0.0.0-20210107165309-348f09dbbbc0/go.mod h1:fyg7847qk6SyHyPtNmDHnmrv/HOrqktSC+C9fM+CJOE=
+github.com/gogf/gf/contrib/nosql/redis/v2 v2.9.0 h1:EEZqu1PNRSmm+7Cqm9A/8+ObgfbMzhE1ps9Z3LD7HgM=
+github.com/gogf/gf/contrib/nosql/redis/v2 v2.9.0/go.mod h1:LHrxY+2IzNTHVTPG/s5yaz1VmXbj+CQ7Hr5SeVkHiTw=
 github.com/gogf/gf/v2 v2.9.0 h1:semN5Q5qGjDQEv4620VzxcJzJlSD07gmyJ9Sy9zfbHk=
 github.com/gogf/gf/v2 v2.9.0/go.mod h1:sWGQw+pLILtuHmbOxoe0D+0DdaXxbleT57axOLH2vKI=
 github.com/golang/protobuf v1.2.0/go.mod h1:6lQm79b+lXiMfvg/cZm0SGofjICqVBUtrP5yJMmIC1U=
