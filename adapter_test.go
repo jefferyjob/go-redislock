@@ -2,11 +2,16 @@ package go_redislock
 
 import (
 	"context"
+	v7 "github.com/go-redis/redis/v7"
+	v8 "github.com/go-redis/redis/v8"
 	mockV7 "github.com/go-redis/redismock/v7"
 	mockV8 "github.com/go-redis/redismock/v8"
 	mockV9 "github.com/go-redis/redismock/v9"
+	gfRdbV2 "github.com/gogf/gf/v2/database/gredis"
 	v9 "github.com/redis/go-redis/v9"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
 	"testing"
 )
 
@@ -42,6 +47,48 @@ func (w *RedisMockCmdWrapper) Int64() (int64, error) {
 // ----------------------------------------------------------------------------------------------
 //  Redis Mock 适配器 End
 // ----------------------------------------------------------------------------------------------
+
+func TestNewRedisAdapter(t *testing.T) {
+	v7Client := &v7.Client{}
+	v8Client := &v8.Client{}
+	v9Client := &v9.Client{}
+	zeroClient := &zeroRdb.Redis{}
+	gfClient := &gfRdbV2.Redis{}
+
+	tests := []struct {
+		name    string
+		client  interface{}
+		wantErr bool
+	}{
+		{"redis.v7", v7Client, false},
+		{"redis.v8", v8Client, false},
+		{"redis.v9", v9Client, false},
+		{"go-zero redis", zeroClient, false},
+		{"gf redis v2", gfClient, false},
+		{"unsupported", "xxx", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			adapter, err := NewRedisAdapter(tt.client)
+			if tt.wantErr {
+				assert.Error(t, err)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, adapter)
+			}
+		})
+	}
+}
+
+func TestMustNewRedisAdapter_Panic(t *testing.T) {
+	defer func() {
+		if r := recover(); r == nil {
+			t.Fatal("Expected panic but didn't")
+		}
+	}()
+	_ = MustNewRedisAdapter("invalid-client")
+}
 
 func TestRedisV9Adapter(t *testing.T) {
 	tests := []struct {
@@ -185,7 +232,6 @@ func TestRedisV7Adapter(t *testing.T) {
 }
 
 func TestGoZeroRedisAdapter(t *testing.T) {
-
 }
 
 func TestGoFrameRedisV2Adapter(t *testing.T) {
