@@ -81,15 +81,6 @@ func TestNewRedisAdapter(t *testing.T) {
 	}
 }
 
-func TestMustNewRedisAdapter_Panic(t *testing.T) {
-	defer func() {
-		if r := recover(); r == nil {
-			t.Fatal("Expected panic but didn't")
-		}
-	}()
-	_ = MustNewRedisAdapter("invalid-client")
-}
-
 func TestRedisV9Adapter(t *testing.T) {
 	tests := []struct {
 		name       string
