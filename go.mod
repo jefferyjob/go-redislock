@@ -1,8 +1,6 @@
 module github.com/jefferyjob/go-redislock
 
-go 1.23
-
-toolchain go1.24.5
+go 1.20
 
 retract v1.0.0
 
