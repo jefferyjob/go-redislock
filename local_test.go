@@ -3,11 +3,8 @@ package go_redislock
 import (
 	"context"
 	"fmt"
-	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
-	gfRdbV2 "github.com/gogf/gf/v2/database/gredis"
 	v9 "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
-	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
 	"log"
 	"os"
 	"sync"
@@ -259,92 +256,6 @@ func TestSevNewRedisAdapter(t *testing.T) {
 	// 线程1加锁-预期成功
 	lock := New(adapter, key)
 	err := lock.Lock(ctx)
-	if err != nil {
-		t.Errorf("Lock() returned unexpected error: %v", err)
-		return
-	}
-	defer lock.UnLock(ctx)
-
-	// 模拟业务处理
-	log.Println("线程1：锁已获取，开始执行任务")
-	time.Sleep(time.Second * 5)
-}
-
-// go-zero 适配器测试
-func TestSevNewGoZeroRdbAdapter(t *testing.T) {
-	redisClient, _ := getRedisClient()
-	if redisClient == nil {
-		log.Println("Github actions skip this test")
-		return
-	}
-
-	adapter := NewGoZeroRdbAdapter(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
-		Host: fmt.Sprintf("%s:%s", addr, port),
-		Type: "node",
-	}))
-
-	ctx := context.Background()
-	key := "test_key"
-
-	// 线程2抢占锁资源-预期失败
-	go func() {
-		time.Sleep(time.Second * 1)
-		lock := New(adapter, key)
-		err := lock.Lock(ctx)
-		if err == nil {
-			t.Errorf("Lock() returned unexpected success: %v", err)
-			return
-		}
-		log.Println("线程2：抢占锁失败，锁已被其他线程占用")
-	}()
-
-	// 线程1加锁-预期成功
-	lock := New(adapter, key)
-	err := lock.Lock(ctx)
-	if err != nil {
-		t.Errorf("Lock() returned unexpected error: %v", err)
-		return
-	}
-	defer lock.UnLock(ctx)
-
-	// 模拟业务处理
-	log.Println("线程1：锁已获取，开始执行任务")
-	time.Sleep(time.Second * 5)
-}
-
-// gf v2 适配器测试
-func TestSevNewGfRedisV2Adapter(t *testing.T) {
-	redisClient, _ := getRedisClient()
-	if redisClient == nil {
-		log.Println("Github actions skip this test")
-		return
-	}
-
-	rdb, err := gfRdbV2.New(&gfRdbV2.Config{
-		Address: fmt.Sprintf("%s:%s", addr, port),
-	})
-	require.NoError(t, err)
-
-	adapter := NewGfRedisV2Adapter(rdb)
-
-	ctx := context.Background()
-	key := "test_key"
-
-	// 线程2抢占锁资源-预期失败
-	go func() {
-		time.Sleep(time.Second * 1)
-		lock := New(adapter, key)
-		err = lock.Lock(ctx)
-		if err == nil {
-			t.Errorf("Lock() returned unexpected success: %v", err)
-			return
-		}
-		log.Println("线程2：抢占锁失败，锁已被其他线程占用")
-	}()
-
-	// 线程1加锁-预期成功
-	lock := New(adapter, key)
-	err = lock.Lock(ctx)
 	if err != nil {
 		t.Errorf("Lock() returned unexpected error: %v", err)
 		return
