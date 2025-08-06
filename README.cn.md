@@ -1,6 +1,6 @@
 # go-redislock
 
-[![Go](https://img.shields.io/badge/Go->=1.24-green)](https://go.dev)
+[![Go](https://img.shields.io/badge/Go->=1.20-green)](https://go.dev)
 [![Release](https://img.shields.io/github/v/release/jefferyjob/go-redislock.svg)](https://github.com/jefferyjob/go-redislock/releases)
 [![Action](https://github.com/jefferyjob/go-redislock/workflows/Go/badge.svg?branch=main)](https://github.com/jefferyjob/go-redislock/actions)
 [![Report](https://goreportcard.com/badge/github.com/jefferyjob/go-redislock)](https://goreportcard.com/report/github.com/jefferyjob/go-redislock)
@@ -21,8 +21,6 @@ go-redislock 提供高度可扩展的客户端适配机制，已内置支持以�
 | go-redis v7 | `github.com/go-redis/redis/v7`                   | ✅        | NewRedisV7Adapter()   |
 | go-redis v8 | `github.com/go-redis/redis/v8`                   | ✅        | NewRedisV8Adapter()   |
 | go-redis v9 | `github.com/redis/go-redis/v9`                   | ✅        | NewRedisV9Adapter()   |
-| go-zero Redis | `github.com/zeromicro/go-zero/core/stores/redis` | ✅        | NewGoZeroRdbAdapter() |
-| goframe Redis | `github.com/gogf/gf/v2/database/gredis`          | ✅        | NewGfRedisV2Adapter() |
 
 如您使用的 Redis 客户端不在上述列表中，也可以实现接口 `RedisInter` 来接入任意 Redis 客户端。
 
