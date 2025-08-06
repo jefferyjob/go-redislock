@@ -27,9 +27,9 @@ func getRedisClient() (RedisInter, *v9.Client) {
 		return nil, nil
 	}
 
-	// if true {
-	// 	return nil, nil
-	// }
+	if true {
+		return nil, nil
+	}
 
 	rdb := v9.NewClient(&v9.Options{
 		Addr: fmt.Sprintf("%s:%s", addr, port),
