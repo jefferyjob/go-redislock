@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	redislock "github.com/jefferyjob/go-redislock"
-	v9 "github.com/redis/go-redis/v9"
+	"github.com/jefferyjob/go-redislock/adapter"
+	"github.com/redis/go-redis/v9"
 )
 
 // RedisSimpleLock 演示如何在官方 go-redis v9/v8/v7... ... 客户端上使用 redislock 库
 func RedisSimpleLock() {
 	// Initialize redis adapter (only once)
-	redisClient := redislock.MustNewRedisAdapter(v9.NewClient(&v9.Options{
+	redisClient := adapter.MustNew(redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	}))
 

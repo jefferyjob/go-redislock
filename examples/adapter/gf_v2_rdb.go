@@ -4,14 +4,15 @@ import (
 	"context"
 	"fmt"
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2" // 注册 Redis 适配器（必须）
-	gfRdbV2 "github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/database/gredis"
 	redislock "github.com/jefferyjob/go-redislock"
+	"github.com/jefferyjob/go-redislock/adapter/gf/v2"
 )
 
 // GfV2RdbLock 演示如何在 gf 框架的 gredis v2 客户端上使用 redislock 库
 func GfV2RdbLock() {
 	// Initialize redis (only once)
-	rdb, err := gfRdbV2.New(&gfRdbV2.Config{
+	rdb, err := gredis.New(&gredis.Config{
 		Address: "localhost:6379",
 	})
 	if err != nil {
@@ -20,13 +21,13 @@ func GfV2RdbLock() {
 	}
 
 	// Create a Redis client using GfV2
-	redisClient := redislock.NewGfRedisV2Adapter(rdb)
+	rdbAdapter := v2.New(rdb)
 
 	// Create a context for canceling lock operations
 	ctx := context.Background()
 
 	// Create a RedisLock object
-	lock := redislock.New(redisClient, "test_key")
+	lock := redislock.New(rdbAdapter, "test_key")
 
 	// acquire lock
 	err = lock.Lock(ctx)
