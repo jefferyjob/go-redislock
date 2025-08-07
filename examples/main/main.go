@@ -4,18 +4,19 @@ import (
 	"context"
 	"fmt"
 	redislock "github.com/jefferyjob/go-redislock"
+	"github.com/jefferyjob/go-redislock/adapter"
 	"github.com/redis/go-redis/v9"
 )
 
 func main() {
 	// Create a Redis client
 	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
+		Addr: "localhost:63790",
 	})
 
 	// Create a Redis client adapter
 	// Note: Use different adapters according to different redis client packages
-	rdbAdapter := redislock.NewRedisV9Adapter(rdb)
+	rdbAdapter := adapter.MustNew(rdb)
 
 	// Create a context for canceling lock operations
 	ctx := context.Background()

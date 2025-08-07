@@ -7,6 +7,17 @@ import (
 	"time"
 )
 
+// RedisInter Redis 客户端接口
+type RedisInter interface {
+	Eval(ctx context.Context, script string, keys []string, args ...interface{}) RedisCmd
+}
+
+// RedisCmd Eval 返回结果的接口
+type RedisCmd interface {
+	Result() (interface{}, error)
+	Int64() (int64, error)
+}
+
 // type RedisInter interface {
 // 	redis.Scripter
 // }
