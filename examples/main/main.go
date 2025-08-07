@@ -9,14 +9,10 @@ import (
 )
 
 func main() {
-	// Create a Redis client
-	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:63790",
-	})
-
 	// Create a Redis client adapter
-	// Note: Use different adapters according to different redis client packages
-	rdbAdapter := adapter.MustNew(rdb)
+	rdbAdapter := adapter.MustNew(redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	}))
 
 	// Create a context for canceling lock operations
 	ctx := context.Background()
