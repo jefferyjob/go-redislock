@@ -16,7 +16,7 @@ func TestNew(t *testing.T) {
 	v8Client := &v8.Client{}
 	v9Client := &v9.Client{}
 	zeroClient := &zeroRdb.Redis{}
-	gfClient1 := gfRdbV1.Redis{}
+	gfClient1 := &gfRdbV1.Redis{}
 	gfClient2 := &gfRdbV2.Redis{}
 
 	tests := []struct {
