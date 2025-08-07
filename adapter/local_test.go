@@ -1,11 +1,10 @@
-package go_redislock
+package adapter
 
 import (
 	"context"
 	"fmt"
-	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 	gfRdbV2 "github.com/gogf/gf/v2/database/gredis"
-	"github.com/jefferyjob/go-redislock/adapter"
+	redislock "github.com/jefferyjob/go-redislock"
 	v9 "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
@@ -26,7 +25,7 @@ var (
 // 你可以实用下面的命令启动一个redis容器进行测试
 // docker run -d -p 63790:6379 --name go_redis_lock redis
 // 注意：该服务在 GITHUB ACTIONS 并不会被测试
-func getRedisClient() (RedisInter, *v9.Client) {
+func getRedisClient() (redislock.RedisInter, *v9.Client) {
 	if os.Getenv("GITHUB_ACTIONS") == "true" {
 		return nil, nil
 	}
@@ -38,7 +37,7 @@ func getRedisClient() (RedisInter, *v9.Client) {
 	rdb := v9.NewClient(&v9.Options{
 		Addr: fmt.Sprintf("%s:%s", addr, port),
 	})
-	rdbAdapter := adapter.MustNew(rdb)
+	rdbAdapter := MustNew(rdb)
 
 	return rdbAdapter, rdb
 }
@@ -54,7 +53,7 @@ func TestSevLock(t *testing.T) {
 	key := "test_key"
 
 	ctx := context.TODO()
-	lock := New(redisClient, key, WithAutoRenew())
+	lock := redislock.New(redisClient, key, redislock.WithAutoRenew())
 	err := lock.Lock(ctx)
 	if err != nil {
 		t.Errorf("lock error: %v", err)
@@ -84,7 +83,7 @@ func TestSevLockSuccess(t *testing.T) {
 
 	go func() {
 		defer wg.Done()
-		lock := New(redisClient, key)
+		lock := redislock.New(redisClient, key)
 		err := lock.Lock(ctx)
 		if err != nil {
 			t.Errorf("线程一：Lock() returned unexpected error: %v", err)
@@ -99,7 +98,7 @@ func TestSevLockSuccess(t *testing.T) {
 		defer wg.Done()
 		time.Sleep(time.Second * 1)
 		log.Println("线程二：开始抢夺锁资源")
-		lock := New(redisClient, key)
+		lock := redislock.New(redisClient, key)
 
 		times, _ := rdb.TTL(ctx, "{"+key+"}").Result()
 		log.Println("线程二：ttl 过期时间还有: ", times.Seconds(), " 秒")
@@ -127,7 +126,7 @@ func TestSevLockCounter(t *testing.T) {
 
 	ctx := context.Background()
 	key := "test_key"
-	lock := New(redisClient, key)
+	lock := redislock.New(redisClient, key)
 
 	err := lock.Lock(ctx)
 	if err != nil {
@@ -168,7 +167,7 @@ func TestSevAutoRenewSuccess(t *testing.T) {
 	// 线程1
 	go func() {
 		defer wg.Done()
-		lock := New(redisClient, key, WithToken(token), WithAutoRenew())
+		lock := redislock.New(redisClient, key, redislock.WithToken(token), redislock.WithAutoRenew())
 		err := lock.Lock(ctx)
 		if err != nil {
 			t.Errorf("Lock() returned unexpected error: %v", err)
@@ -186,7 +185,7 @@ func TestSevAutoRenewSuccess(t *testing.T) {
 		defer wg.Done()
 		time.Sleep(time.Second * 7)
 		log.Println("线程2：开始抢夺锁资源")
-		lock := New(redisClient, key, WithToken(token2), WithAutoRenew())
+		lock := redislock.New(redisClient, key, redislock.WithToken(token2), redislock.WithAutoRenew())
 		err := lock.Lock(ctx)
 		if err == nil {
 			defer lock.UnLock(ctx)
@@ -210,9 +209,9 @@ func TestSevAutoRenewList(t *testing.T) {
 	ctx := context.Background()
 	key := "test_key"
 
-	lock := New(redisClient, key, WithToken("token"),
-		WithTimeout(10*time.Second),
-		WithAutoRenew())
+	lock := redislock.New(redisClient, key, redislock.WithToken("token"),
+		redislock.WithTimeout(10*time.Second),
+		redislock.WithAutoRenew())
 	err := lock.Lock(ctx)
 	require.NoError(t, err)
 	defer lock.UnLock(ctx)
@@ -238,7 +237,7 @@ func TestSevNewRedisAdapter(t *testing.T) {
 		return
 	}
 
-	adapter := adapter.MustNew(v9.NewClient(&v9.Options{
+	adapter := MustNew(v9.NewClient(&v9.Options{
 		Addr: fmt.Sprintf("%s:%s", addr, port),
 	}))
 
@@ -248,7 +247,7 @@ func TestSevNewRedisAdapter(t *testing.T) {
 	// 线程2抢占锁资源-预期失败
 	go func() {
 		time.Sleep(time.Second * 1)
-		lock := New(adapter, key)
+		lock := redislock.New(adapter, key)
 		err := lock.Lock(ctx)
 		if err == nil {
 			t.Errorf("Lock() returned unexpected success: %v", err)
@@ -258,7 +257,7 @@ func TestSevNewRedisAdapter(t *testing.T) {
 	}()
 
 	// 线程1加锁-预期成功
-	lock := New(adapter, key)
+	lock := redislock.New(adapter, key)
 	err := lock.Lock(ctx)
 	if err != nil {
 		t.Errorf("Lock() returned unexpected error: %v", err)
@@ -279,7 +278,7 @@ func TestSevNewGoZeroRdbAdapter(t *testing.T) {
 		return
 	}
 
-	adapter := adapter.MustNew(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
+	adapter := MustNew(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
 		Host: fmt.Sprintf("%s:%s", addr, port),
 		Type: "node",
 	}))
@@ -290,7 +289,7 @@ func TestSevNewGoZeroRdbAdapter(t *testing.T) {
 	// 线程2抢占锁资源-预期失败
 	go func() {
 		time.Sleep(time.Second * 1)
-		lock := New(adapter, key)
+		lock := redislock.New(adapter, key)
 		err := lock.Lock(ctx)
 		if err == nil {
 			t.Errorf("Lock() returned unexpected success: %v", err)
@@ -300,7 +299,7 @@ func TestSevNewGoZeroRdbAdapter(t *testing.T) {
 	}()
 
 	// 线程1加锁-预期成功
-	lock := New(adapter, key)
+	lock := redislock.New(adapter, key)
 	err := lock.Lock(ctx)
 	if err != nil {
 		t.Errorf("Lock() returned unexpected error: %v", err)
@@ -326,7 +325,7 @@ func TestSevNewGfRedisV2Adapter(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	adapter := adapter.MustNew(rdb)
+	adapter := MustNew(rdb)
 
 	ctx := context.Background()
 	key := "test_key"
@@ -334,7 +333,7 @@ func TestSevNewGfRedisV2Adapter(t *testing.T) {
 	// 线程2抢占锁资源-预期失败
 	go func() {
 		time.Sleep(time.Second * 1)
-		lock := New(adapter, key)
+		lock := redislock.New(adapter, key)
 		err = lock.Lock(ctx)
 		if err == nil {
 			t.Errorf("Lock() returned unexpected success: %v", err)
@@ -344,7 +343,7 @@ func TestSevNewGfRedisV2Adapter(t *testing.T) {
 	}()
 
 	// 线程1加锁-预期成功
-	lock := New(adapter, key)
+	lock := redislock.New(adapter, key)
 	err = lock.Lock(ctx)
 	if err != nil {
 		t.Errorf("Lock() returned unexpected error: %v", err)
