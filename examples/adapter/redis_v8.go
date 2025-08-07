@@ -3,14 +3,15 @@ package adapter
 import (
 	"context"
 	"fmt"
-	v8 "github.com/go-redis/redis/v8"
+	"github.com/go-redis/redis/v8"
 	redislock "github.com/jefferyjob/go-redislock"
+	"github.com/jefferyjob/go-redislock/adapter/v8"
 )
 
-// RedisV8Lock 演示如何在官方 go-redis v8 客户端上使用 redislock 库
-func RedisV8Lock() {
+// 演示如何在官方 go-redis v8 客户端上使用 redislock 库
+func v8Demo() {
 	// Initialize redis adapter (only once)
-	redisClient := redislock.NewRedisV8Adapter(v8.NewClient(&v8.Options{
+	redisClient := v8.New(redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	}))
 
