@@ -13,11 +13,11 @@ require (
 	github.com/gogf/gf v1.16.9
 	github.com/gogf/gf/contrib/nosql/redis/v2 v2.9.0
 	github.com/gogf/gf/v2 v2.9.0
+	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.6.0
 	github.com/redis/go-redis/v9 v9.11.0
 	github.com/stretchr/testify v1.10.0
 	github.com/zeromicro/go-zero v1.8.5
-	go.uber.org/mock v0.5.2
 )
 
 require (
