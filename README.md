@@ -21,7 +21,6 @@ We implemented the following key capabilities:
 - 🔄 Manual and automatic renewal
 - ✅ Compatibility with multiple Redis clients (v7/v8/v9, go-zero, goframe)
 
----
 
 ## Quick start
 

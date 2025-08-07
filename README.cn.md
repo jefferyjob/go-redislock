@@ -21,7 +21,6 @@ go-redislock 是一个用于 Go 的库，用于使用 Redis 作为后端存储�
 - 🔄 手动续期与自动续期
 - ✅ 多 Redis 客户端适配（v7/v8/v9、go-zero、goframe）
 
----
 
 ## 快速开始
 
