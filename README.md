@@ -13,18 +13,15 @@ English | [简体中文](README.cn.md)
 ## Introduce
 go-redislock is a library for Go that provides distributed lock functionality using Redis as the backend storage. Ensure data sharing and resource mutual exclusion under concurrent access in a distributed environment. Our distributed lock has the characteristics of reliability, high performance, timeout mechanism, reentrancy and flexible lock release method, which simplifies the use of distributed lock and allows you to focus on the realization of business logic.
 
-## Redis client support
-go-redislock provides a highly scalable client adaptation mechanism, and has built-in support for the following mainstream Redis clients. For detailed examples, please refer to [examples](examples/adapter) .
+We implemented the following key capabilities:
 
-| Redis Client Version | Package path | Supported | Adapter method |
-|----------------------|--------------------------------------------------| -------- |-----------------------|
-| go-redis v7          | `github.com/go-redis/redis/v7`                   | ✅        | NewRedisV7Adapter()   |
-| go-redis v8          | `github.com/go-redis/redis/v8`                   | ✅        | NewRedisV8Adapter()   |
-| go-redis v9          | `github.com/redis/go-redis/v9`                   | ✅        | NewRedisV9Adapter()   |
-| go-zero Redis        | `github.com/zeromicro/go-zero/core/stores/redis` | ✅        | NewGoZeroRdbAdapter() |
-| goframe Redis        | `github.com/gogf/gf/v2/database/gredis`          | ✅        | NewGfRedisV2Adapter() |
+- 🔒 Standard distributed locks (reentrant)
+- 🔁 Spin locks
+- ⚖️ Fair locks (FIFO order)
+- 🔄 Manual and automatic renewal
+- ✅ Compatibility with multiple Redis clients (v7/v8/v9, go-zero, goframe)
 
-If the Redis client you are using is not in the above list, you can also implement the interface `RedisInter` to connect to any Redis client.
+---
 
 ## Quick start
 
@@ -83,7 +80,21 @@ func main() {
 | WithToken(token string) | Reentrant lock Token (unique identifier) | Random UUID |
 | WithRequestTimeout(d time.Duration) | Maximum waiting time for fair lock queue | Same as TTL |
 
-### API Quick Check
+## Core Function Overview
+
+| Function Type | Method Name | Description |
+| ----- | --------------------------------------- |-----------------|
+| Basic Lock Function | `Lock(ctx)` | Acquire a normal lock (supports reentrancy) |
+| | `SpinLock(ctx, timeout)` | Acquire a normal lock by spin |
+| | `UnLock(ctx)` | Unlock |
+| | `Renew(ctx)` | Manually renew |
+| Fair Lock Function | `FairLock(ctx, requestId)` | Acquire a fair lock (based on a FIFO queue) |
+| | `SpinFairLock(ctx, requestId, timeout)` | Acquire a fair lock by spin |
+| | `FairUnLock(ctx, requestId)` | Unlock a fair lock |
+| | `FairRenew(ctx, requestId)` | Renew a fair lock |
+
+The corresponding interface definitions are as follows
+
 ```go
 type RedisLockInter interface {
     // Lock Locking
@@ -106,14 +117,31 @@ type RedisLockInter interface {
 }
 ```
 
+## Redis client support
+go-redislock provides a highly scalable client adaptation mechanism, and has built-in support for the following mainstream Redis clients. For detailed examples, please refer to [examples](examples/adapter) .
+
+| Redis Client Version | Package path | Supported | Adapter method |
+|----------------------|--------------------------------------------------| -------- |-----------------------|
+| go-redis v7          | `github.com/go-redis/redis/v7`                   | ✅        | NewRedisV7Adapter()   |
+| go-redis v8          | `github.com/go-redis/redis/v8`                   | ✅        | NewRedisV8Adapter()   |
+| go-redis v9          | `github.com/redis/go-redis/v9`                   | ✅        | NewRedisV9Adapter()   |
+| go-zero Redis        | `github.com/zeromicro/go-zero/core/stores/redis` | ✅        | NewGoZeroRdbAdapter() |
+| goframe Redis        | `github.com/gogf/gf/v2/database/gredis`          | ✅        | NewGfRedisV2Adapter() |
+
+If the Redis client you are using is not in the above list, you can also implement the interface `RedisInter` to connect to any Redis client.
+
 
 ## Precautions
-- Create a new `RedisLock` instance each time you lock.
-- Please make sure your Redis server is set up correctly, connected and running properly.
-- When using the automatic renewal function, ensure that there is no long-term blocking during task execution, so as not to cause the renewal to fail.
-- Consider using appropriate timeout settings to avoid deadlocks due to network issues etc.
-- Try to ensure that the same key is used to acquire and release locks to ensure correctness.
-- In the process of using locks, it is recommended to carefully design and test critical code blocks to avoid race conditions and deadlock problems.
+- It is recommended to use a new lock instance each time you acquire a lock.
+- The same key and token must be used for locking and unlocking.
+- The default TTL is 5 seconds, but it is recommended to set it based on the duration of the task.
+- Automatic renewal is suitable for non-blocking tasks to avoid long blocking times.
+- Fair locks require a unique request ID (UUID is recommended).
+- Read locks can be concurrent, while write locks are mutually exclusive to avoid read-write conflicts.
+- Failure of any sublock in an interlock releases all locked resources.
+- Redis must remain available to avoid deadlocks caused by network issues.
+- It is recommended to use defer unlocking in critical logic to prevent leaks.
+- It is recommended to log or monitor lock acquisition failures, retries, and other behaviors.
 
 ## License
 This library is licensed under the MIT. See the LICENSE file for details.

@@ -13,18 +13,15 @@
 ## 介绍
 go-redislock 是一个用于 Go 的库，用于使用 Redis 作为后端存储提供分布式锁功能。确保在分布式环境中的并发访问下实现数据共享和资源互斥。我们的分布式锁具备可靠性、高性能、超时机制、可重入性和灵活的锁释放方式等特性，简化了分布式锁的使用，让您专注于业务逻辑的实现。
 
-## Redis客户端支持
-go-redislock 提供高度可扩展的客户端适配机制，已内置支持以下主流 Redis 客户端，详细示例请参考 [examples](examples/adapter) 。
+我们实现了以下关键能力：
 
-| Redis客户端版本  | 包路径 | 是否支持 | 适配器方法 |
-|-------------|--------------------------------------------------| -------- |-----------------------|
-| go-redis v7 | `github.com/go-redis/redis/v7`                   | ✅        | NewRedisV7Adapter()   |
-| go-redis v8 | `github.com/go-redis/redis/v8`                   | ✅        | NewRedisV8Adapter()   |
-| go-redis v9 | `github.com/redis/go-redis/v9`                   | ✅        | NewRedisV9Adapter()   |
-| go-zero Redis | `github.com/zeromicro/go-zero/core/stores/redis` | ✅        | NewGoZeroRdbAdapter() |
-| goframe Redis | `github.com/gogf/gf/v2/database/gredis`          | ✅        | NewGfRedisV2Adapter() |
+- 🔒 普通分布式锁（可重入）
+- 🔁 自旋锁
+- ⚖️ 公平锁（FIFO 顺序）
+- 🔄 手动续期与自动续期
+- ✅ 多 Redis 客户端适配（v7/v8/v9、go-zero、goframe）
 
-如您使用的 Redis 客户端不在上述列表中，也可以实现接口 `RedisInter` 来接入任意 Redis 客户端。
+---
 
 ## 快速开始
 
@@ -82,7 +79,21 @@ func main() {
 | WithToken(token string)             | 可重入锁 Token（唯一标识） | 随机 UUID |
 | WithRequestTimeout(d time.Duration) | 公平锁队列最大等待时间      | 同 TTL   |
 
-### API 速查
+## 核心功能一览
+
+| 功能类型  | 方法名                                     | 说明              |
+| ----- | --------------------------------------- |-----------------|
+| 基础锁功能 | `Lock(ctx)`                             | 获取普通锁（支持可重入）    |
+|       | `SpinLock(ctx, timeout)`                | 自旋获取普通锁         |
+|       | `UnLock(ctx)`                           | 解锁              |
+|       | `Renew(ctx)`                            | 手动续期            |
+| 公平锁功能 | `FairLock(ctx, requestId)`              | 获取公平锁（基于FIFO队列） |
+|       | `SpinFairLock(ctx, requestId, timeout)` | 自旋获取公平锁         |
+|       | `FairUnLock(ctx, requestId)`            | 公平锁解锁           |
+|       | `FairRenew(ctx, requestId)`             | 公平锁续期           |
+
+对应的接口定义如下
+
 ```go
 type RedisLockInter interface {
 	// Lock 加锁
@@ -105,14 +116,31 @@ type RedisLockInter interface {
 }
 ```
 
+## Redis客户端支持
+go-redislock 提供高度可扩展的客户端适配机制，已内置支持以下主流 Redis 客户端，详细示例请参考 [examples](examples/adapter) 。
+
+| Redis客户端版本  | 包路径 | 是否支持 | 适配器方法 |
+|-------------|--------------------------------------------------| -------- |-----------------------|
+| go-redis v7 | `github.com/go-redis/redis/v7`                   | ✅        | NewRedisV7Adapter()   |
+| go-redis v8 | `github.com/go-redis/redis/v8`                   | ✅        | NewRedisV8Adapter()   |
+| go-redis v9 | `github.com/redis/go-redis/v9`                   | ✅        | NewRedisV9Adapter()   |
+| go-zero Redis | `github.com/zeromicro/go-zero/core/stores/redis` | ✅        | NewGoZeroRdbAdapter() |
+| goframe Redis | `github.com/gogf/gf/v2/database/gredis`          | ✅        | NewGfRedisV2Adapter() |
+
+如您使用的 Redis 客户端不在上述列表中，也可以实现接口 `RedisInter` 来接入任意 Redis 客户端。
+
 
 ## 注意事项
-- 每次加锁都创建一个新的 `RedisLock` 实例。
-- 请确保您的 Redis 服务器设置正确，并且能够正常连接和运行。
-- 在使用自动续约功能时，确保在任务执行期间没有出现长时间的阻塞，以免导致续约失败。
-- 考虑使用适当的超时设置，以避免由于网络问题等原因导致死锁。
-- 尽量保证使用相同的 key 来获取和释放锁，以确保正确性。
-- 在使用锁的过程中，建议对关键代码块进行精心设计和测试，以避免出现竞态条件和死锁问题。
+- 每次加锁建议使用新的锁实例。
+- 加锁和解锁必须使用同一个 key 和 token。
+- 默认 TTL 是 5 秒，建议根据任务耗时自行设置。
+- 自动续期适合无阻塞任务，避免长时间阻塞。
+- 公平锁需传入唯一的 requestId（建议使用 UUID）。
+- 读锁可并发，写锁互斥，避免读写冲突。
+- 联锁中任一子锁失败会释放所有已加锁资源。
+- Redis 需保持可用，避免因网络问题导致死锁。
+- 建议关键逻辑中使用 defer 解锁，防止泄露。
+- 建议对锁获取失败、重试等行为做日志或监控。
 
 ## 许可证
 本库采用 MIT 进行授权。有关详细信息，请参阅 LICENSE 文件。

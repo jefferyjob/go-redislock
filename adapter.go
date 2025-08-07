@@ -61,6 +61,33 @@ func NewRedisAdapter(rawClient interface{}) (RedisInter, error) {
 	}
 }
 
+// MustNewRedisAdapter creates a Redis adapter and panics if an error occurs.
+//
+// It is a helper function that wraps NewRedisAdapter, and should be used when
+// the caller expects the Redis client to be valid and initialization should not fail.
+//
+// Parameters:
+// - rawClient: Redis client instance
+//
+// Return value:
+// - RedisInter: The initialized Redis adapter instance
+//
+// Panic:
+//   - If the provided client type is unsupported, the function logs the error and panics,
+//     including the error message and current stack trace.
+//
+// # MustNewRedisAdapter 创建 Redis 适配器，如出错则直接 panic
+//
+// 它是对 NewRedisAdapter 的封装，适用于调用方确信 Redis 客户端类型合法且初始化不应失败的场景。
+//
+// 参数：
+//   - rawClient：Redis 客户端实例
+//
+// 返回值：
+//   - RedisInter：已初始化的 Redis 适配器实例
+//
+// 异常：
+//   - 若传入的客户端类型不受支持，函数会打印错误信息和当前堆栈信息，并触发 panic
 func MustNewRedisAdapter(rawClient interface{}) RedisInter {
 	adapter, err := NewRedisAdapter(rawClient)
 	if err != nil {
