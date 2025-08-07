@@ -5,6 +5,7 @@ import (
 	"fmt"
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 	gfRdbV2 "github.com/gogf/gf/v2/database/gredis"
+	"github.com/jefferyjob/go-redislock/adapter"
 	v9 "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
@@ -37,7 +38,7 @@ func getRedisClient() (RedisInter, *v9.Client) {
 	rdb := v9.NewClient(&v9.Options{
 		Addr: fmt.Sprintf("%s:%s", addr, port),
 	})
-	rdbAdapter := NewRedisV9Adapter(rdb)
+	rdbAdapter := adapter.MustNew(rdb)
 
 	return rdbAdapter, rdb
 }
@@ -237,7 +238,7 @@ func TestSevNewRedisAdapter(t *testing.T) {
 		return
 	}
 
-	adapter := MustNewRedisAdapter(v9.NewClient(&v9.Options{
+	adapter := adapter.MustNew(v9.NewClient(&v9.Options{
 		Addr: fmt.Sprintf("%s:%s", addr, port),
 	}))
 
@@ -278,7 +279,7 @@ func TestSevNewGoZeroRdbAdapter(t *testing.T) {
 		return
 	}
 
-	adapter := NewGoZeroRdbAdapter(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
+	adapter := adapter.MustNew(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
 		Host: fmt.Sprintf("%s:%s", addr, port),
 		Type: "node",
 	}))
@@ -325,7 +326,7 @@ func TestSevNewGfRedisV2Adapter(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	adapter := NewGfRedisV2Adapter(rdb)
+	adapter := adapter.MustNew(rdb)
 
 	ctx := context.Background()
 	key := "test_key"

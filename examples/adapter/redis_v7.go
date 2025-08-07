@@ -3,24 +3,23 @@ package adapter
 import (
 	"context"
 	"fmt"
+	"github.com/go-redis/redis/v7"
 	redislock "github.com/jefferyjob/go-redislock"
-	"github.com/jefferyjob/go-redislock/adapter/gozero"
-	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
+	"github.com/jefferyjob/go-redislock/adapter/v7"
 )
 
-// 演示如何在 gozero 框架的 redis 客户端上使用 redislock 库
-func demoGoZero() {
+// 演示如何在官方 go-redis v7 客户端上使用 redislock 库
+func v7Demo() {
 	// Initialize redis adapter (only once)
-	rdbAdapter := gozero.New(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
-		Host: "localhost:6379",
-		Type: "node",
+	redisClient := v7.New(redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
 	}))
 
 	// Create a context for canceling lock operations
 	ctx := context.Background()
 
 	// Create a RedisLock object
-	lock := redislock.New(rdbAdapter, "test_key")
+	lock := redislock.New(redisClient, "test_key")
 
 	// acquire lock
 	err := lock.Lock(ctx)

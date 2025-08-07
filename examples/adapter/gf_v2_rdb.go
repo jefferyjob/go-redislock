@@ -9,8 +9,8 @@ import (
 	"github.com/jefferyjob/go-redislock/adapter/gf/v2"
 )
 
-// GfV2RdbLock 演示如何在 gf 框架的 gredis v2 客户端上使用 redislock 库
-func GfV2RdbLock() {
+// 演示如何在 gf 框架的 gredis v2 客户端上使用 redislock 库
+func demoGfV2() {
 	// Initialize redis (only once)
 	rdb, err := gredis.New(&gredis.Config{
 		Address: "localhost:6379",
