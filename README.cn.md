@@ -78,21 +78,25 @@ func main() {
 | WithToken(token string)             | 可重入锁 Token（唯一标识） | 随机 UUID |
 | WithRequestTimeout(d time.Duration) | 公平锁队列最大等待时间      | 同 TTL   |
 
+
 ## 核心功能一览
+### 普通锁
+| 方法名                        | 说明                   |
+|------------------------------|------------------------|
+| `Lock(ctx)`                  | 获取普通锁（支持可重入）   |
+| `SpinLock(ctx, timeout)`     | 自旋方式获取普通锁        |
+| `UnLock(ctx)`                | 解锁操作                |
+| `Renew(ctx)`                 | 手动续期                |
 
-| 功能类型  | 方法名                                     | 说明              |
-| ----- | --------------------------------------- |-----------------|
-| 基础锁功能 | `Lock(ctx)`                             | 获取普通锁（支持可重入）    |
-|       | `SpinLock(ctx, timeout)`                | 自旋获取普通锁         |
-|       | `UnLock(ctx)`                           | 解锁              |
-|       | `Renew(ctx)`                            | 手动续期            |
-| 公平锁功能 | `FairLock(ctx, requestId)`              | 获取公平锁（基于FIFO队列） |
-|       | `SpinFairLock(ctx, requestId, timeout)` | 自旋获取公平锁         |
-|       | `FairUnLock(ctx, requestId)`            | 公平锁解锁           |
-|       | `FairRenew(ctx, requestId)`             | 公平锁续期           |
+### 公平锁（FIFO）
+| 方法名                                      | 说明                 |
+|--------------------------------------------|----------------------|
+| `FairLock(ctx, requestId)`                 | 获取公平锁（FIFO）      |
+| `SpinFairLock(ctx, requestId, timeout)`    | 自旋方式获取公平锁      |
+| `FairUnLock(ctx, requestId)`               | 公平锁解锁            |
+| `FairRenew(ctx, requestId)`                | 公平锁续期            |
 
-对应的接口定义如下
-
+### 接口定义如下
 ```go
 type RedisLockInter interface {
 	// Lock 加锁
@@ -134,12 +138,12 @@ go-redislock 提供高度可扩展的客户端适配机制，已内置支持以�
 - 加锁和解锁必须使用同一个 key 和 token。
 - 默认 TTL 是 5 秒，建议根据任务耗时自行设置。
 - 自动续期适合无阻塞任务，避免长时间阻塞。
+- 建议关键逻辑中使用 `defer unlock`，防止泄露。
+- 建议对锁获取失败、重试等行为做日志或监控。
 - 公平锁需传入唯一的 requestId（建议使用 UUID）。
 - 读锁可并发，写锁互斥，避免读写冲突。
-- 联锁中任一子锁失败会释放所有已加锁资源。
-- Redis 需保持可用，避免因网络问题导致死锁。
-- 建议关键逻辑中使用 defer 解锁，防止泄露。
-- 建议对锁获取失败、重试等行为做日志或监控。
+- 联锁中任一子锁失败，会释放已加成功的锁。
+- Redis 不可用时可能造成死锁风险。
 
 ## 许可证
 本库采用 MIT 进行授权。有关详细信息，请参阅 LICENSE 文件。
