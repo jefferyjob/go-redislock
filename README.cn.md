@@ -37,18 +37,15 @@ import (
 	"context"
 	"fmt"
 	redislock "github.com/jefferyjob/go-redislock"
+	"github.com/jefferyjob/go-redislock/adapter"
 	"github.com/redis/go-redis/v9"
 )
 
 func main() {
-	// 创建 Redis 客户端
-	rdb := redis.NewClient(&redis.Options{
-		Addr: "localhost:6379",
-	})
-
 	// 创建 Redis 客户端适配器
-	// 注意：根据不同的 Redis 客户端包使用不同的适配器
-	rdbAdapter := redislock.NewRedisV9Adapter(rdb)
+	rdbAdapter := adapter.MustNew(redis.NewClient(&redis.Options{
+		Addr: "localhost:6379",
+	}))
 
 	// 创建用于取消锁定操作的上下文
 	ctx := context.Background()
