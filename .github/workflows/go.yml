@@ -9,9 +9,21 @@ on:
 jobs:
   linux-build:
     runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7.2
+        ports:
+          - 63790:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     strategy:
       matrix:
         go-version: [ '1.24' ]
+
     steps:
       - uses: actions/checkout@v3
 
