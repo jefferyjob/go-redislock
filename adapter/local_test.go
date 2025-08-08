@@ -3,21 +3,23 @@ package adapter
 import (
 	"context"
 	"fmt"
+	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
 	gfRdbV2 "github.com/gogf/gf/v2/database/gredis"
 	redislock "github.com/jefferyjob/go-redislock"
 	v9 "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
 	"log"
-	"os"
 	"sync"
 	"testing"
 	"time"
 )
 
 var (
-	addr = "127.0.0.1"
-	port = "63790"
+	addr         = "127.0.0.1"
+	port         = "63790"
+	luaSetScript = `return redis.call("SET", KEYS[1], ARGV[1])`
+	luaGetScript = `return redis.call("GET", KEYS[1])`
 )
 
 // Redis服务器测试
@@ -26,9 +28,9 @@ var (
 // docker run -d -p 63790:6379 --name go_redis_lock redis
 // 注意：该服务在 GITHUB ACTIONS 并不会被测试
 func getRedisClient() (redislock.RedisInter, *v9.Client) {
-	if os.Getenv("GITHUB_ACTIONS") == "true" {
-		return nil, nil
-	}
+	// if os.Getenv("GITHUB_ACTIONS") == "true" {
+	// 	return nil, nil
+	// }
 
 	// if true {
 	// 	return nil, nil
@@ -229,14 +231,12 @@ func TestSevAutoRenewList(t *testing.T) {
 	time.Sleep(time.Second * 20)
 }
 
-// redis适配器测试
-func TestSevNewRedisAdapter(t *testing.T) {
-	redisClient, _ := getRedisClient()
-	if redisClient == nil {
-		log.Println("Github actions skip this test")
-		return
-	}
+// ----------------------------------------------------------------------------------------------
+// 测试适配器的兼容性
+// ----------------------------------------------------------------------------------------------
 
+// redis适配器测试
+func TestSevNewRedisV9Adapter(t *testing.T) {
 	adapter := MustNew(v9.NewClient(&v9.Options{
 		Addr: fmt.Sprintf("%s:%s", addr, port),
 	}))
@@ -271,13 +271,7 @@ func TestSevNewRedisAdapter(t *testing.T) {
 }
 
 // go-zero 适配器测试
-func TestSevNewGoZeroRdbAdapter(t *testing.T) {
-	redisClient, _ := getRedisClient()
-	if redisClient == nil {
-		log.Println("Github actions skip this test")
-		return
-	}
-
+func TestSevNewGoZeroAdapter(t *testing.T) {
 	adapter := MustNew(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
 		Host: fmt.Sprintf("%s:%s", addr, port),
 		Type: "node",
@@ -313,13 +307,7 @@ func TestSevNewGoZeroRdbAdapter(t *testing.T) {
 }
 
 // gf v2 适配器测试
-func TestSevNewGfRedisV2Adapter(t *testing.T) {
-	redisClient, _ := getRedisClient()
-	if redisClient == nil {
-		log.Println("Github actions skip this test")
-		return
-	}
-
+func TestSevNewGfV2Adapter(t *testing.T) {
 	rdb, err := gfRdbV2.New(&gfRdbV2.Config{
 		Address: fmt.Sprintf("%s:%s", addr, port),
 	})
