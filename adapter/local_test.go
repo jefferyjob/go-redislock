@@ -237,6 +237,12 @@ func TestSevAutoRenewList(t *testing.T) {
 
 // redis适配器测试
 func TestSevNewRedisV9Adapter(t *testing.T) {
+	redisClient, _ := getRedisClient()
+	if redisClient == nil {
+		log.Println("Github actions skip this test")
+		return
+	}
+
 	adapter := MustNew(v9.NewClient(&v9.Options{
 		Addr: fmt.Sprintf("%s:%s", addr, port),
 	}))
@@ -272,6 +278,12 @@ func TestSevNewRedisV9Adapter(t *testing.T) {
 
 // go-zero 适配器测试
 func TestSevNewGoZeroAdapter(t *testing.T) {
+	redisClient, _ := getRedisClient()
+	if redisClient == nil {
+		log.Println("Github actions skip this test")
+		return
+	}
+
 	adapter := MustNew(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
 		Host: fmt.Sprintf("%s:%s", addr, port),
 		Type: "node",
@@ -308,6 +320,12 @@ func TestSevNewGoZeroAdapter(t *testing.T) {
 
 // gf v2 适配器测试
 func TestSevNewGfV2Adapter(t *testing.T) {
+	redisClient, _ := getRedisClient()
+	if redisClient == nil {
+		log.Println("Github actions skip this test")
+		return
+	}
+
 	rdb, err := gfRdbV2.New(&gfRdbV2.Config{
 		Address: fmt.Sprintf("%s:%s", addr, port),
 	})
