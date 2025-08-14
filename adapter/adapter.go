@@ -9,12 +9,12 @@ import (
 	redislock "github.com/jefferyjob/go-redislock"
 	adapterGfV1 "github.com/jefferyjob/go-redislock/adapter/gf/v1"
 	adapterGfV2 "github.com/jefferyjob/go-redislock/adapter/gf/v2"
-	adapterGoZero "github.com/jefferyjob/go-redislock/adapter/gozero"
+	adapterGz "github.com/jefferyjob/go-redislock/adapter/gozero"
 	adapterV7 "github.com/jefferyjob/go-redislock/adapter/v7"
 	adapterV8 "github.com/jefferyjob/go-redislock/adapter/v8"
 	adapterV9 "github.com/jefferyjob/go-redislock/adapter/v9"
 	v9 "github.com/redis/go-redis/v9"
-	gozeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
+	gzRdb "github.com/zeromicro/go-zero/core/stores/redis"
 	"log"
 	"runtime/debug"
 )
@@ -28,8 +28,8 @@ func New(rawClient interface{}) (redislock.RedisInter, error) {
 		return adapterV8.New(client), nil
 	case *v9.Client:
 		return adapterV9.New(client), nil
-	case *gozeroRdb.Redis:
-		return adapterGoZero.New(client), nil
+	case *gzRdb.Redis:
+		return adapterGz.New(client), nil
 	case *gfRdbV1.Redis:
 		return adapterGfV1.New(client), nil
 	case *gfRdbV2.Redis:
