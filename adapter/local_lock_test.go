@@ -11,7 +11,7 @@ import (
 	"github.com/jefferyjob/go-redislock/adapter/gozero"
 	v9 "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
-	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
+	gzRdb "github.com/zeromicro/go-zero/core/stores/redis"
 	"log"
 	"sync"
 	"testing"
@@ -287,7 +287,7 @@ func TestSevNewGoZeroAdapter(t *testing.T) {
 		return
 	}
 
-	adapter := gozero.New(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
+	adapter := gozero.New(gzRdb.MustNewRedis(gzRdb.RedisConf{
 		Host: fmt.Sprintf("%s:%s", addr, port),
 		Type: "node",
 	}))

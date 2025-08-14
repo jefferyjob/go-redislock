@@ -16,7 +16,7 @@ import (
 	adapterRdbV9 "github.com/jefferyjob/go-redislock/adapter/v9"
 	rdbV9 "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
-	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
+	gzRdb "github.com/zeromicro/go-zero/core/stores/redis"
 	"strconv"
 	"testing"
 )
@@ -85,7 +85,7 @@ func TestSevNewRdbV9(t *testing.T) {
 }
 
 func TestSevNewGoZero(t *testing.T) {
-	adapter := adapterGzV1.New(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
+	adapter := adapterGzV1.New(gzRdb.MustNewRedis(gzRdb.RedisConf{
 		Host: fmt.Sprintf("%s:%s", addr, port),
 		Type: "node",
 	}))
