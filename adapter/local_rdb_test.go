@@ -10,7 +10,7 @@ import (
 	gfRdbV2 "github.com/gogf/gf/v2/database/gredis"
 	adapterGfV1 "github.com/jefferyjob/go-redislock/adapter/gf/v1"
 	adapterGfV2 "github.com/jefferyjob/go-redislock/adapter/gf/v2"
-	"github.com/jefferyjob/go-redislock/adapter/gozero"
+	adapterGzV1 "github.com/jefferyjob/go-redislock/adapter/gozero"
 	adapterRdbV7 "github.com/jefferyjob/go-redislock/adapter/v7"
 	adapterRdbV8 "github.com/jefferyjob/go-redislock/adapter/v8"
 	adapterRdbV9 "github.com/jefferyjob/go-redislock/adapter/v9"
@@ -85,7 +85,7 @@ func TestSevNewRdbV9(t *testing.T) {
 }
 
 func TestSevNewGoZero(t *testing.T) {
-	adapter := gozero.New(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
+	adapter := adapterGzV1.New(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
 		Host: fmt.Sprintf("%s:%s", addr, port),
 		Type: "node",
 	}))
