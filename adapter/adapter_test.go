@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"fmt"
 	v7 "github.com/go-redis/redis/v7"
 	v8 "github.com/go-redis/redis/v8"
 	gfRdbV1 "github.com/gogf/gf/database/gredis"
@@ -44,4 +45,14 @@ func TestNew(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestMustNew(t *testing.T) {
+	defer func() {
+		if err := recover(); err != nil {
+			fmt.Println("Expected panic:", err)
+		}
+	}()
+
+	MustNew("xxx")
 }
