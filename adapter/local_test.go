@@ -4,12 +4,17 @@ import (
 	"context"
 	"fmt"
 	_ "github.com/gogf/gf/contrib/nosql/redis/v2"
+	gfRdbV1 "github.com/gogf/gf/database/gredis"
 	gfRdbV2 "github.com/gogf/gf/v2/database/gredis"
 	redislock "github.com/jefferyjob/go-redislock"
+	adapterGfV1 "github.com/jefferyjob/go-redislock/adapter/gf/v1"
+	adapterGfV2 "github.com/jefferyjob/go-redislock/adapter/gf/v2"
+	"github.com/jefferyjob/go-redislock/adapter/gozero"
 	v9 "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
 	"log"
+	"strconv"
 	"sync"
 	"testing"
 	"time"
@@ -284,7 +289,7 @@ func TestSevNewGoZeroAdapter(t *testing.T) {
 		return
 	}
 
-	adapter := MustNew(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
+	adapter := gozero.New(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
 		Host: fmt.Sprintf("%s:%s", addr, port),
 		Type: "node",
 	}))
@@ -318,6 +323,26 @@ func TestSevNewGoZeroAdapter(t *testing.T) {
 	time.Sleep(time.Second * 5)
 }
 
+func TestSevNewGoZero(t *testing.T) {
+	adapter := gozero.New(zeroRdb.MustNewRedis(zeroRdb.RedisConf{
+		Host: fmt.Sprintf("%s:%s", addr, port),
+		Type: "node",
+	}))
+
+	ctx := context.Background()
+
+	adapter.Eval(ctx, luaSetScript, []string{"test_key"}, "1")
+	cmd := adapter.Eval(ctx, luaGetScript, []string{"test_key"})
+	_, err := cmd.Result()
+	require.NoError(t, err)
+	i, err := cmd.Int64()
+	require.NoError(t, err)
+	if i != 1 {
+		t.Errorf("Expected value 1, got %d", i)
+		return
+	}
+}
+
 // gf v2 适配器测试
 func TestSevNewGfV2Adapter(t *testing.T) {
 	redisClient, _ := getRedisClient()
@@ -331,7 +356,7 @@ func TestSevNewGfV2Adapter(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	adapter := MustNew(rdb)
+	adapter := adapterGfV2.New(rdb)
 
 	ctx := context.Background()
 	key := "test_key"
@@ -360,4 +385,47 @@ func TestSevNewGfV2Adapter(t *testing.T) {
 	// 模拟业务处理
 	log.Println("线程1：锁已获取，开始执行任务")
 	time.Sleep(time.Second * 5)
+}
+
+func TestSevNewGfV1(t *testing.T) {
+	newPort, _ := strconv.Atoi(port)
+	rdb := gfRdbV1.New(&gfRdbV1.Config{
+		Host: addr,
+		Port: newPort,
+	})
+
+	ctx := context.Background()
+
+	adapter := adapterGfV1.New(rdb)
+	adapter.Eval(ctx, luaSetScript, []string{"test_key"}, "1")
+	cmd := adapter.Eval(ctx, luaGetScript, []string{"test_key"})
+	_, err := cmd.Result()
+	require.NoError(t, err)
+	i, err := cmd.Int64()
+	require.NoError(t, err)
+	if i != 1 {
+		t.Errorf("Expected value 1, got %d", i)
+		return
+	}
+}
+
+func TestSevNewGfV2(t *testing.T) {
+	rdb, err := gfRdbV2.New(&gfRdbV2.Config{
+		Address: fmt.Sprintf("%s:%s", addr, port),
+	})
+	require.NoError(t, err)
+
+	ctx := context.Background()
+
+	adapter := adapterGfV2.New(rdb)
+	adapter.Eval(ctx, luaSetScript, []string{"test_key"}, "1")
+	cmd := adapter.Eval(ctx, luaGetScript, []string{"test_key"})
+	_, err = cmd.Result()
+	require.NoError(t, err)
+	i, err := cmd.Int64()
+	require.NoError(t, err)
+	if i != 1 {
+		t.Errorf("Expected value 1, got %d", i)
+		return
+	}
 }
