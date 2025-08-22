@@ -3,8 +3,9 @@ package go_redislock
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // RedisInter Redis 客户端接口
@@ -25,44 +26,46 @@ type RedisCmd interface {
 // RedisLockInter defines the interface for distributed Redis locks
 // RedisLockInter 定义了 Redis 分布式锁的接口
 type RedisLockInter interface {
-
-	// Lock tries to acquire a standard lock.
-	// This implementation supports "reentrant locks". If the lock is currently held by the same key+token, reentry is allowed and the count is increased. Unlock() needs to be called a corresponding number of times to release the lock.
-	//
-	// Lock 尝试获取普通锁。
-	// 该实现支持“可重入锁”，如果当前已由相同 key+token 持有，允许重入并增加计数。需调用相应次数 Unlock() 释放
+	// Lock 加锁
 	Lock(ctx context.Context) error
-
-	// SpinLock keeps trying to acquire the lock until timeout.
-	// SpinLock 在指定超时时间内不断尝试加锁。
+	// SpinLock 自旋锁。
 	SpinLock(ctx context.Context, timeout time.Duration) error
-
-	// UnLock releases the standard lock.
-	// If it is a reentrant lock, each call will reduce the holding count until the count reaches 0 and the lock will be released.
-	//
-	// UnLock 释放普通锁。
-	// 如果为重入锁，每调用一次减少一次持有计数，直到计数为 0 锁会被释放
+	// UnLock 解锁
 	UnLock(ctx context.Context) error
-
-	// Renew manually extends the lock expiration.
-	// Renew 手动延长锁的有效期。
+	// Renew 锁续期
 	Renew(ctx context.Context) error
 
-	// FairLock tries to acquire a fair lock using the given requestId.
-	// 公平锁加锁：使用指定的 requestId 获取公平锁。
+	// FairLock 公平锁加锁
 	FairLock(ctx context.Context, requestId string) error
-
-	// SpinFairLock keeps trying to acquire a fair lock until timeout.
-	// SpinFairLock 在指定超时时间内不断尝试获取公平锁。
+	// SpinFairLock 自旋公平锁
 	SpinFairLock(ctx context.Context, requestId string, timeout time.Duration) error
-
-	// FairUnLock releases the fair lock held by the given requestId.
-	// FairUnLock 根据 requestId 释放公平锁。
+	// FairUnLock 公平锁解锁
 	FairUnLock(ctx context.Context, requestId string) error
-
-	// FairRenew manually extends the expiration of a fair lock.
-	// FairRenew 手动延长指定 requestId 的公平锁有效期。
+	// FairRenew 公平锁续期
 	FairRenew(ctx context.Context, requestId string) error
+
+	// RLock 获取读锁
+	RLock(ctx context.Context) error
+	// RUnLock 释放读锁
+	RUnLock(ctx context.Context) error
+	// SpinRLock 自旋读锁
+	SpinRLock(ctx context.Context, timeout time.Duration) error
+	// RRenew 续期读锁
+	RRenew(ctx context.Context) error
+
+	// WLock 获取写锁
+	WLock(ctx context.Context) error
+	// WUnLock 释放写锁
+	WUnLock(ctx context.Context) error
+	// SpinWLock 自旋写锁
+	SpinWLock(ctx context.Context, timeout time.Duration) error
+	// WRenew 续期写锁
+	WRenew(ctx context.Context) error
+
+	// MultiLock 联锁加锁
+	MultiLock(ctx context.Context, locks []RedisLockInter, timeout time.Duration) error
+	// MultiUnLock 联锁解锁
+	MultiUnLock(ctx context.Context, locks []RedisLockInter) error
 }
 
 type RedisLock struct {

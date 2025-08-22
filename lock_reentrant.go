@@ -17,7 +17,11 @@ var (
 	reentrantRenewScript string
 )
 
-// Lock 可重入锁加锁
+// Lock tries to acquire a standard lock.
+// This implementation supports "reentrant locks". If the lock is currently held by the same key+token, reentry is allowed and the count is increased. Unlock() needs to be called a corresponding number of times to release the lock.
+//
+// Lock 尝试获取普通锁。
+// 该实现支持“可重入锁”，如果当前已由相同 key+token 持有，允许重入并增加计数。需调用相应次数 Unlock() 释放
 func (l *RedisLock) Lock(ctx context.Context) error {
 	result, err := l.redis.Eval(ctx, reentrantLockScript,
 		[]string{l.key},
@@ -41,7 +45,11 @@ func (l *RedisLock) Lock(ctx context.Context) error {
 	return nil
 }
 
-// UnLock 解锁
+// UnLock releases the standard lock.
+// If it is a reentrant lock, each call will reduce the holding count until the count reaches 0 and the lock will be released.
+//
+// UnLock 释放普通锁。
+// 如果为重入锁，每调用一次减少一次持有计数，直到计数为 0 锁会被释放
 func (l *RedisLock) UnLock(ctx context.Context) error {
 	// 如果已经创建了取消函数，则执行取消操作
 	if l.autoRenewCancel != nil {
@@ -64,7 +72,8 @@ func (l *RedisLock) UnLock(ctx context.Context) error {
 	return nil
 }
 
-// SpinLock 自旋锁
+// SpinLock keeps trying to acquire the lock until timeout.
+// SpinLock 在指定超时时间内不断尝试加锁。
 func (l *RedisLock) SpinLock(ctx context.Context, timeout time.Duration) error {
 	exp := time.Now().Add(timeout)
 	for {
@@ -87,7 +96,8 @@ func (l *RedisLock) SpinLock(ctx context.Context, timeout time.Duration) error {
 	}
 }
 
-// Renew 锁手动续期
+// Renew manually extends the lock expiration.
+// Renew 手动延长锁的有效期。
 func (l *RedisLock) Renew(ctx context.Context) error {
 	res, err := l.redis.Eval(
 		ctx,

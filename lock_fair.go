@@ -17,7 +17,8 @@ var (
 	fairRenewScript string
 )
 
-// FairLock 公平锁尝试加锁
+// FairLock 公平锁尝试加锁（使用指定的 requestId 获取公平锁）
+// FairLock tries to acquire a fair lock using the given requestId.
 // 公平锁确保请求按照顺序获取锁，避免饥饿现象
 // 如果是队首且成功获取锁则返回 nil，否则返回 ErrLockFailed
 func (l *RedisLock) FairLock(ctx context.Context, requestId string) error {
@@ -46,7 +47,8 @@ func (l *RedisLock) FairLock(ctx context.Context, requestId string) error {
 	return nil
 }
 
-// SpinFairLock 自旋公平锁
+// SpinFairLock keeps trying to acquire a fair lock until timeout.
+// SpinFairLock 在指定超时时间内不断尝试获取公平锁。
 func (l *RedisLock) SpinFairLock(ctx context.Context, requestId string, timeout time.Duration) error {
 	exp := time.Now().Add(timeout)
 	for {
@@ -70,7 +72,8 @@ func (l *RedisLock) SpinFairLock(ctx context.Context, requestId string, timeout 
 	}
 }
 
-// FairUnLock 公平锁解锁
+// FairUnLock releases the fair lock held by the given requestId.
+// FairUnLock 根据 requestId 释放公平锁。
 func (l *RedisLock) FairUnLock(ctx context.Context, requestId string) error {
 	if l.autoRenewCancel != nil {
 		l.autoRenewCancel()
@@ -94,7 +97,8 @@ func (l *RedisLock) FairUnLock(ctx context.Context, requestId string) error {
 	return nil
 }
 
-// FairRenew 公平锁手动续期
+// FairRenew manually extends the expiration of a fair lock.
+// FairRenew 手动延长指定 requestId 的公平锁有效期。
 func (l *RedisLock) FairRenew(ctx context.Context, requestId string) error {
 	res, err := l.redis.Eval(
 		ctx,
