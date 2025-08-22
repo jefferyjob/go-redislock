@@ -1,20 +1,12 @@
-local lock_keys = KEYS
-local request_id = ARGV[1]
+-- 锁 key 和 value
+local lock_key = '{' .. KEYS[1] .. '}'
+local lock_value = ARGV[1]
 local lock_ttl = tonumber(ARGV[2])
-local acquired = {}
 
--- 尝试获取所有锁
-for i, lock_key in ipairs(lock_keys) do
-    local result = redis.call('SET', lock_key, request_id, 'NX', 'EX', lock_ttl)
-    if result == 'OK' then
-        table.insert(acquired, lock_key)
-    else
-        -- 如果获取锁失败，则释放所有已成功获取的锁
-        for _, key in ipairs(acquired) do
-            redis.call('DEL', key)
-        end
-        return nil
-    end
+-- 尝试创建锁
+if redis.call('SET', lock_key, lock_value, 'NX', 'PX', lock_ttl) then
+    return 1
 end
 
-return 'OK'
+-- 获取失败
+return 0

@@ -24,7 +24,6 @@ type RedisCmd interface {
 // }
 
 // RedisLockInter defines the interface for distributed Redis locks
-// RedisLockInter 定义了 Redis 分布式锁的接口
 type RedisLockInter interface {
 	// Lock 加锁
 	Lock(ctx context.Context) error
@@ -44,28 +43,32 @@ type RedisLockInter interface {
 	// FairRenew 公平锁续期
 	FairRenew(ctx context.Context, requestId string) error
 
-	// RLock 获取读锁
+	// RLock 读锁加锁
 	RLock(ctx context.Context) error
-	// RUnLock 释放读锁
+	// RUnLock 读锁解锁
 	RUnLock(ctx context.Context) error
 	// SpinRLock 自旋读锁
 	SpinRLock(ctx context.Context, timeout time.Duration) error
-	// RRenew 续期读锁
+	// RRenew 读锁续期
 	RRenew(ctx context.Context) error
 
-	// WLock 获取写锁
+	// WLock 写锁加锁
 	WLock(ctx context.Context) error
-	// WUnLock 释放写锁
+	// WUnLock 写锁解锁
 	WUnLock(ctx context.Context) error
 	// SpinWLock 自旋写锁
 	SpinWLock(ctx context.Context, timeout time.Duration) error
-	// WRenew 续期写锁
+	// WRenew 写锁续期
 	WRenew(ctx context.Context) error
 
 	// MultiLock 联锁加锁
-	MultiLock(ctx context.Context, locks []RedisLockInter, timeout time.Duration) error
+	// MultiLock(ctx context.Context, locks []RedisLockInter) error
 	// MultiUnLock 联锁解锁
-	MultiUnLock(ctx context.Context, locks []RedisLockInter) error
+	// MultiUnLock(ctx context.Context, locks []RedisLockInter) error
+	// SpinMultiLock 自旋联锁
+	// SpinMultiLock(ctx context.Context, locks []RedisLockInter, timeout time.Duration) error
+	// MultiRenew 联锁续期
+	// MultiRenew(ctx context.Context, locks []RedisLockInter) error
 }
 
 type RedisLock struct {
@@ -81,21 +84,6 @@ type RedisLock struct {
 type Option func(lock *RedisLock)
 
 // New creates a RedisLock instance
-// If a token is not provided via WithToken, a unique token will be automatically generated and an implementation of RedisLockInter will be returned
-//
-// Parameters:
-// - ctx: context for locking operations and cancellations
-// - redisClient: abstract Redis client that implements RedisInter
-// - lockKey: Redis key used for locking
-// - options: optional configuration items, such as timeout, automatic renewal, etc.
-//
-// New 创建一个 RedisLock 实例
-// 如果未通过 WithToken 提供令牌，则将自动生成一个唯一的令牌，最终返回 RedisLockInter 的一个实现
-//
-// 参数：
-// - redisClient：实现 RedisInter 的抽象 Redis 客户端
-// - lockKey：用于锁定的 Redis 键
-// - options：可选配置项，如超时时间、自动续期等
 func New(redisClient RedisInter, lockKey string, options ...Option) RedisLockInter {
 	lock := &RedisLock{
 		redis:          redisClient,

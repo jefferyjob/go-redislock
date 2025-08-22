@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"errors"
+	"log"
 	"time"
 )
 
@@ -17,27 +18,108 @@ var (
 )
 
 func (l *RedisLock) WLock(ctx context.Context) error {
-	res, err := l.redis.Eval(ctx, writeLockScript, []string{l.key}, l.token, l.lockTimeout.Milliseconds()).Int64()
+	res, err := l.redis.Eval(ctx, writeLockScript,
+		[]string{l.key},
+		l.token,
+		l.lockTimeout.Milliseconds(),
+	).Int64()
+
 	if err != nil {
 		return errors.Join(err, ErrException)
 	}
+
 	if res != 1 {
 		return ErrLockFailed
 	}
+
+	if l.isAutoRenew {
+		ctxRenew, cancel := context.WithCancel(ctx)
+		l.autoRenewCancel = cancel
+		go l.autoWLockRenew(ctxRenew)
+	}
+
 	return nil
 }
 
 func (l *RedisLock) WUnLock(ctx context.Context) error {
-	// TODO implement me
-	panic("implement me")
+	// 如果已经创建了取消函数，则执行取消操作
+	if l.autoRenewCancel != nil {
+		l.autoRenewCancel()
+	}
+
+	res, err := l.redis.Eval(
+		ctx,
+		writeUnLockScript,
+		[]string{l.key}, l.token,
+	).Int64()
+
+	if err != nil {
+		return errors.Join(err, ErrException)
+	}
+	if res != 1 {
+		return ErrUnLockFailed
+	}
+
+	return nil
 }
 
 func (l *RedisLock) SpinWLock(ctx context.Context, timeout time.Duration) error {
-	// TODO implement me
-	panic("implement me")
+	exp := time.Now().Add(timeout)
+	for {
+		if time.Now().After(exp) {
+			return ErrSpinLockTimeout
+		}
+
+		// 加锁成功直接返回
+		if err := l.WLock(ctx); err == nil {
+			return nil
+		}
+
+		// 如果加锁失败，则休眠一段时间再尝试
+		select {
+		case <-ctx.Done():
+			return errors.Join(ErrSpinLockDone, context.Canceled) // 处理取消操作
+		case <-time.After(100 * time.Millisecond):
+			// 继续尝试下一轮加锁
+		}
+	}
 }
 
 func (l *RedisLock) WRenew(ctx context.Context) error {
-	// TODO implement me
-	panic("implement me")
+	res, err := l.redis.Eval(
+		ctx,
+		writeRenewScript,
+		[]string{l.key},
+		l.token,
+		l.lockTimeout.Milliseconds(),
+	).Int64()
+
+	if err != nil {
+		return errors.Join(err, ErrException)
+	}
+
+	if res != 1 {
+		return ErrLockRenewFailed
+	}
+
+	return nil
+}
+
+// 锁自动续期
+func (l *RedisLock) autoWLockRenew(ctx context.Context) {
+	ticker := time.NewTicker(l.lockTimeout / 3)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-ticker.C:
+			err := l.WRenew(ctx)
+			if err != nil {
+				log.Printf("Error: autoWRenew failed, %v", err)
+				return
+			}
+		}
+	}
 }
