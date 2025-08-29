@@ -18,9 +18,11 @@ We implemented the following key capabilities:
 - 🔒 Standard distributed locks (reentrant)
 - 🔁 Spin locks
 - ⚖️ Fair locks (FIFO order)
+- 【Coming Soon】🧵Read lock (multiple readers access concurrently, mutually exclusive writers)
+- 【Coming Soon】✍️Write lock (exclusive access to a resource)
+- 【Coming Soon】🔗Multilock (Multi-Lock) (multiple locks must be acquired simultaneously, and all successful acquisitions are considered a lock)
 - 🔄 Manual and automatic renewal
 - ✅ Compatibility with multiple Redis clients (v7/v8/v9, go-zero, goframe)
-
 
 ## Quick start
 
@@ -92,6 +94,22 @@ func main() {
 | `SpinFairLock(ctx, requestId, timeout)` | Acquire a fair lock using a spinlock method |
 | `FairUnLock(ctx, requestId)` | Unlock a fair lock |
 | `FairRenew(ctx, requestId)` | Fair Lock Renewal |
+
+### 【Coming Soon】Read Lock
+| Method Name | Description |
+|--------------------------|-------------|
+| `RLock(ctx)` | Acquire a read lock (supports reentrancy) |
+| `SpinRLock(ctx, timeout)` | Acquire a read lock using a spinlock |
+| `UnLRock(ctx)` | Unlock operation |
+| `RRenew(ctx)` | Manually renew the lock |
+
+### 【Coming Soon】Write Lock
+| Method Name | Description |
+|--------------------------|-------------|
+| `WLock(ctx)` | Acquire a write lock (supports reentrancy) |
+| `SpinWLock(ctx, timeout)` | Acquire a write lock using a spinlock |
+| `UnWLock(ctx)` | Unlock operation |
+| `WRenew(ctx)` | Manually renew the lock |
 
 ### The interface is defined as follows
 ```go
