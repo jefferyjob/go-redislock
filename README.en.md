@@ -18,9 +18,11 @@ We implemented the following key capabilities:
 - 🔒 Standard distributed locks (reentrant)
 - 🔁 Spin locks
 - ⚖️ Fair locks (FIFO order)
+- 【Development in progress】🧵Read lock (multiple readers access concurrently, mutually exclusive writers)
+- 【Development in progress】✍️Write lock (exclusive access to a resource)
+- 【Development in progress】🔗Multilock (Multi-Lock) (multiple locks must be acquired simultaneously, and all successful acquisitions are considered a lock)
 - 🔄 Manual and automatic renewal
 - ✅ Compatibility with multiple Redis clients (v7/v8/v9, go-zero, goframe)
-
 
 ## Quick start
 
