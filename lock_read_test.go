@@ -3,6 +3,7 @@ package go_redislock
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -168,4 +169,43 @@ func TestRUnLock(t *testing.T) {
 			}
 		})
 	}
+}
+
+// 测试读锁和写锁的互斥性
+func TestRLockByWriteLock(t *testing.T) {
+	ctx := context.Background()
+
+	var (
+		wg = &sync.WaitGroup{}
+	)
+
+	// mock Redis
+	db, mock := redismock.NewClientMock()
+	mock.ExpectEval(writeLockScript, []string{"testKey"}, "token", lockTime.Milliseconds()).SetVal(int64(1)) // 写锁-加锁成功
+	mock.ExpectEval(readLockScript, []string{"testKey"}, "token", lockTime.Milliseconds()).SetVal(int64(0))  // 读锁-加锁成功
+	adapter := NewRedisMockAdapter(db)
+
+	f1 := func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		lock := New(adapter, "testKey", WithToken("token"))
+		err := lock.WLock(ctx)
+		if err != nil {
+			t.Errorf("Failed to lock: %v", err)
+		}
+	}
+
+	f2 := func(wg *sync.WaitGroup) {
+		defer wg.Done()
+		time.Sleep(1 * time.Second) // 确保写锁已经加锁成功
+		lock := New(adapter, "testKey", WithToken("token"))
+		err := lock.RLock(ctx)
+		if err == nil {
+			t.Errorf("Failed to lock: %v", err)
+		}
+	}
+
+	wg.Add(2)
+	go f1(wg)
+	go f2(wg)
+	wg.Wait()
 }

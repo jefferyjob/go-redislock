@@ -38,19 +38,22 @@ if mode == 'write' then
 end
 
 -- 如果当前锁模式是读锁
--- 总读者数
-local total = tonumber(redis.call('HGET', local_key, 'rcount') or '0')
--- 自己的读锁计数
-local self_cnt = tonumber(redis.call('HGET', local_key, 'r:' .. lock_value) or '0')
-if total == self_cnt then
-    -- 仅自己持有读锁，可以升级为写锁
-    redis.call('HSET', local_key,
-            'mode', 'write',
-            'writer', lock_value,
-            'wcount', 1)
-    redis.call('PEXPIRE', local_key, lock_ttl)
-    return 1
+if mode == 'read' then
+    -- 总读者数
+    local total = tonumber(redis.call('HGET', local_key, 'rcount') or '0')
+    -- 自己的读锁计数
+    local self_cnt = tonumber(redis.call('HGET', local_key, 'r:' .. lock_value) or '0')
+    if total == self_cnt then
+        -- 仅自己持有读锁，可以升级为写锁
+        redis.call('HSET', local_key,
+                'mode', 'write',
+                'writer', lock_value,
+                'wcount', 1)
+        redis.call('PEXPIRE', local_key, lock_ttl)
+        return 1
+    end
 end
+
 
 -- 其他情况无法获取写锁（存在其他读者或写锁被他人占用）
 return 0
