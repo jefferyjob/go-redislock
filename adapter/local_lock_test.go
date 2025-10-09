@@ -461,7 +461,12 @@ func TestWLockReentrant(t *testing.T) {
 		if err != nil {
 			t.Errorf("Failed to lock: %v", err)
 		}
+
 		time.Sleep(time.Second * 1)
+
+		if i == 4 {
+			lock.WUnLock(ctx)
+		}
 	}
 }
 
@@ -488,7 +493,7 @@ func TestRLockByWriteLock(t *testing.T) {
 		},
 		{
 			name:        "读锁抢夺写锁，他人持有写锁，失败",
-			inputKey:    "testKey",
+			inputKey:    "testKey2",
 			inputRToken: "testRToken",
 			inputWToken: "testWToken",
 			wantRErr:    redislock.ErrLockFailed,
