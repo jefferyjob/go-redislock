@@ -2,6 +2,8 @@ package adapter
 
 import (
 	"fmt"
+	"testing"
+
 	v7 "github.com/go-redis/redis/v7"
 	v8 "github.com/go-redis/redis/v8"
 	gfRdbV1 "github.com/gogf/gf/database/gredis"
@@ -9,7 +11,6 @@ import (
 	v9 "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/assert"
 	zeroRdb "github.com/zeromicro/go-zero/core/stores/redis"
-	"testing"
 )
 
 func TestNew(t *testing.T) {
