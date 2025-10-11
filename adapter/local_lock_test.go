@@ -25,6 +25,7 @@ var (
 	port         = "63790"
 	luaSetScript = `return redis.call("SET", KEYS[1], ARGV[1])`
 	luaGetScript = `return redis.call("GET", KEYS[1])`
+	luaDelScript = `return redis.call("DEL", KEYS[1])`
 )
 
 // Redis服务器测试

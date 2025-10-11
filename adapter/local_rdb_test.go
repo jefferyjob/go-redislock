@@ -4,6 +4,9 @@ package adapter
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"testing"
+
 	rdbV7 "github.com/go-redis/redis/v7"
 	rdbV8 "github.com/go-redis/redis/v8"
 	gfRdbV1 "github.com/gogf/gf/database/gredis"
@@ -17,8 +20,6 @@ import (
 	rdbV9 "github.com/redis/go-redis/v9"
 	"github.com/stretchr/testify/require"
 	gzRdb "github.com/zeromicro/go-zero/core/stores/redis"
-	"strconv"
-	"testing"
 )
 
 func TestSevNewRdbV7(t *testing.T) {
@@ -29,6 +30,7 @@ func TestSevNewRdbV7(t *testing.T) {
 	ctx := context.Background()
 
 	adapter.Eval(ctx, luaSetScript, []string{"test_key"}, "1")
+	defer adapter.Eval(ctx, luaDelScript, []string{"test_key"})
 	cmd := adapter.Eval(ctx, luaGetScript, []string{"test_key"})
 
 	_, err := cmd.Result()
@@ -50,6 +52,7 @@ func TestSevNewRdbV8(t *testing.T) {
 	ctx := context.Background()
 
 	adapter.Eval(ctx, luaSetScript, []string{"test_key"}, "1")
+	defer adapter.Eval(ctx, luaDelScript, []string{"test_key"})
 	cmd := adapter.Eval(ctx, luaGetScript, []string{"test_key"})
 
 	_, err := cmd.Result()
@@ -71,6 +74,7 @@ func TestSevNewRdbV9(t *testing.T) {
 	ctx := context.Background()
 
 	adapter.Eval(ctx, luaSetScript, []string{"test_key"}, "1")
+	defer adapter.Eval(ctx, luaDelScript, []string{"test_key"})
 	cmd := adapter.Eval(ctx, luaGetScript, []string{"test_key"})
 
 	_, err := cmd.Result()
@@ -93,6 +97,7 @@ func TestSevNewGoZero(t *testing.T) {
 	ctx := context.Background()
 
 	adapter.Eval(ctx, luaSetScript, []string{"test_key"}, "1")
+	defer adapter.Eval(ctx, luaDelScript, []string{"test_key"})
 	cmd := adapter.Eval(ctx, luaGetScript, []string{"test_key"})
 
 	_, err := cmd.Result()
@@ -117,6 +122,7 @@ func TestSevNewGfV1(t *testing.T) {
 
 	adapter := adapterGfV1.New(rdb)
 	adapter.Eval(ctx, luaSetScript, []string{"test_key"}, "1")
+	defer adapter.Eval(ctx, luaDelScript, []string{"test_key"})
 	cmd := adapter.Eval(ctx, luaGetScript, []string{"test_key"})
 
 	_, err := cmd.Result()
@@ -139,6 +145,7 @@ func TestSevNewGfV2(t *testing.T) {
 	adapter := adapterGfV2.New(rdb)
 
 	adapter.Eval(ctx, luaSetScript, []string{"test_key"}, "1")
+	defer adapter.Eval(ctx, luaDelScript, []string{"test_key"})
 	cmd := adapter.Eval(ctx, luaGetScript, []string{"test_key"})
 
 	_, err = cmd.Result()
