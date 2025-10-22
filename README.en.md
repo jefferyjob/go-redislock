@@ -18,8 +18,8 @@ We implemented the following key capabilities:
 - 🔒 Standard distributed locks (reentrant)
 - 🔁 Spin locks
 - ⚖️ Fair locks (FIFO order)
-- 【Coming Soon】🧵Read lock (multiple readers access concurrently, mutually exclusive writers)
-- 【Coming Soon】✍️Write lock (exclusive access to a resource)
+- 🧵Read lock (multiple readers access concurrently, mutually exclusive writers)
+- ✍️Write lock (exclusive access to a resource)
 - 【Coming Soon】🔗Multilock (Multi-Lock) (multiple locks must be acquired simultaneously, and all successful acquisitions are considered a lock)
 - 🔄 Manual and automatic renewal
 - ✅ Compatibility with multiple Redis clients (v7/v8/v9, go-zero, goframe)
@@ -95,7 +95,7 @@ func main() {
 | `FairUnLock(ctx, requestId)` | Unlock a fair lock |
 | `FairRenew(ctx, requestId)` | Fair Lock Renewal |
 
-### 【Coming Soon】Read Lock
+### Read Lock
 | Method Name | Description |
 |--------------------------|-------------|
 | `RLock(ctx)` | Acquire a read lock (supports reentrancy) |
@@ -103,7 +103,7 @@ func main() {
 | `UnLRock(ctx)` | Unlock operation |
 | `RRenew(ctx)` | Manually renew the lock |
 
-### 【Coming Soon】Write Lock
+### Write Lock
 | Method Name | Description |
 |--------------------------|-------------|
 | `WLock(ctx)` | Acquire a write lock (supports reentrancy) |
@@ -131,6 +131,24 @@ type RedisLockInter interface {
     FairUnLock(ctx context.Context, requestId string) error
     // FairRenew Fair Lock Renew
     FairRenew(ctx context.Context, requestId string) error
+
+    // RLock read lock locked
+    RLock(ctx context.Context) error
+    // RUnLock read lock unlocked
+    RUnLock(ctx context.Context) error
+    // SpinRLock spin read lock
+    SpinRLock(ctx context.Context, timeout time.Duration) error
+    // RRenew read lock renewed
+    RRenew(ctx context.Context) error
+    
+    // WLock write lock locked
+    WLock(ctx context.Context) error
+    // WUnLock write lock unlocked
+    WUnLock(ctx context.Context) error
+    // SpinWLock spin write lock
+    SpinWLock(ctx context.Context, timeout time.Duration) error
+    // WRenew write lock renewed
+    WRenew(ctx context.Context) error
 }
 ```
 
