@@ -18,8 +18,8 @@ go-redislock 是一个用于 Go 的库，用于使用 Redis 作为后端存储�
 - 🔒 普通分布式锁（可重入）
 - 🔁 自旋锁
 - ⚖️ 公平锁（FIFO 顺序）
-- 【即将发布】🧵读锁（多个读者并发访问，互斥写者）
-- 【即将发布】✍️写锁（独占访问资源）
+- 🧵读锁（多个读者并发访问，互斥写者）
+- ✍️写锁（独占访问资源）
 - 【即将发布】🔗联锁（MultiLock）（多个锁一起获取，全成功才算加锁）
 - 🔄 手动续期与自动续期
 - ✅ 多 Redis 客户端适配（v7/v8/v9、go-zero、goframe）
@@ -95,7 +95,7 @@ func main() {
 | `FairUnLock(ctx, requestId)`               | 公平锁解锁            |
 | `FairRenew(ctx, requestId)`                | 公平锁续期            |
 
-### 【即将发布】读锁
+### 读锁
 | 方法名                      | 说明          |
 |--------------------------|-------------|
 | `RLock(ctx)`             | 获取读锁（支持可重入） |
@@ -103,7 +103,7 @@ func main() {
 | `UnLRock(ctx)`            | 解锁操作        |
 | `RRenew(ctx)`             | 手动续期        |
 
-### 【即将发布】写锁
+### 写锁
 | 方法名                      | 说明          |
 |--------------------------|-------------|
 | `WLock(ctx)`             | 获取写锁（支持可重入） |
@@ -131,6 +131,24 @@ type RedisLockInter interface {
 	FairUnLock(ctx context.Context, requestId string) error
 	// FairRenew 公平锁续期
 	FairRenew(ctx context.Context, requestId string) error
+
+    // RLock 读锁加锁
+    RLock(ctx context.Context) error
+    // RUnLock 读锁解锁
+    RUnLock(ctx context.Context) error
+    // SpinRLock 自旋读锁
+    SpinRLock(ctx context.Context, timeout time.Duration) error
+    // RRenew 读锁续期
+    RRenew(ctx context.Context) error
+    
+    // WLock 写锁加锁
+    WLock(ctx context.Context) error
+    // WUnLock 写锁解锁
+    WUnLock(ctx context.Context) error
+    // SpinWLock 自旋写锁
+    SpinWLock(ctx context.Context, timeout time.Duration) error
+    // WRenew 写锁续期
+    WRenew(ctx context.Context) error
 }
 ```
 
