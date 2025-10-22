@@ -1,8 +1,9 @@
-package gozero
+package go_zero
 
 import (
 	"context"
 	"fmt"
+
 	redislock "github.com/jefferyjob/go-redislock"
 	"github.com/zeromicro/go-zero/core/stores/redis"
 )

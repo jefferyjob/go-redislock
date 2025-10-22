@@ -1,9 +1,11 @@
-package v1
+package v2
 
 import (
 	"context"
-	"github.com/gogf/gf/database/gredis"
-	"github.com/gogf/gf/frame/g"
+	"fmt"
+
+	"github.com/gogf/gf/v2/database/gredis"
+	"github.com/gogf/gf/v2/frame/g"
 	redislock "github.com/jefferyjob/go-redislock"
 )
 
@@ -16,14 +18,7 @@ func New(client *gredis.Redis) redislock.RedisInter {
 }
 
 func (r *RdbAdapter) Eval(ctx context.Context, script string, keys []string, args ...interface{}) redislock.RedisCmd {
-	params := make([]interface{}, 0, 2+len(keys)+len(args))
-	params = append(params, script, int64(len(keys)))
-	for _, k := range keys {
-		params = append(params, k)
-	}
-	params = append(params, args...)
-
-	eval, err := r.client.DoVar("EVAL", params...)
+	eval, err := r.client.Eval(ctx, script, int64(len(keys)), keys, args)
 	return &RdbCmdWrapper{
 		cmd: eval,
 		err: err,
@@ -47,5 +42,16 @@ func (w *RdbCmdWrapper) Int64() (int64, error) {
 		return 0, w.err
 	}
 
-	return w.cmd.Int64(), nil
+	switch v := w.cmd.Val().(type) {
+	case int64:
+		return v, nil
+	case int:
+		return int64(v), nil
+	case string:
+		var i int64
+		_, err := fmt.Sscanf(v, "%d", &i)
+		return i, err
+	default:
+		return 0, fmt.Errorf("cannot convert result to int: %T", w.cmd)
+	}
 }
