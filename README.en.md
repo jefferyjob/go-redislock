@@ -38,14 +38,15 @@ package main
 import (
 	"context"
 	"fmt"
+
 	redislock "github.com/jefferyjob/go-redislock"
-	"github.com/jefferyjob/go-redislock/adapter"
+	adapter "github.com/jefferyjob/go-redislock/adapter/go-redis/v9"
 	"github.com/redis/go-redis/v9"
 )
 
 func main() {
 	// Create a Redis client adapter
-	rdbAdapter := adapter.MustNew(redis.NewClient(&redis.Options{
+	rdbAdapter := adapter.New(redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	}))
 

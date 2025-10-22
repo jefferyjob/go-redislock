@@ -38,35 +38,37 @@ package main
 import (
 	"context"
 	"fmt"
+
 	redislock "github.com/jefferyjob/go-redislock"
-	"github.com/jefferyjob/go-redislock/adapter"
+	adapter "github.com/jefferyjob/go-redislock/adapter/go-redis/v9"
 	"github.com/redis/go-redis/v9"
 )
 
 func main() {
-	// 创建 Redis 客户端适配器
-	rdbAdapter := adapter.MustNew(redis.NewClient(&redis.Options{
+	// Create a Redis client adapter
+	rdbAdapter := adapter.New(redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	}))
 
-	// 创建用于取消锁定操作的上下文
+	// Create a context for canceling lock operations
 	ctx := context.Background()
 
-	// 创建 RedisLock 对象
+	// Create a RedisLock object
 	lock := redislock.New(rdbAdapter, "test_key")
 
-	// 获取锁
+	// acquire lock
 	err := lock.Lock(ctx)
 	if err != nil {
-		fmt.Println("lock获取失败：", err)
+		fmt.Println("lock acquisition failed：", err)
 		return
 	}
-	defer lock.UnLock(ctx) // 解锁
+	defer lock.UnLock(ctx) // unlock
 
-	// 锁定期间执行任务
+	// Perform tasks during lockdown
 	// ...
-	fmt.Println("任务执行完成")
+	fmt.Println("task execution completed")
 }
+
 ```
 
 ### 配置选项
