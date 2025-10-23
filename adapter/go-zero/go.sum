@@ -32,8 +32,8 @@ github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0 h1:bkypFPDjIYGfCYD5mRBvpqxfYX1
 github.com/grpc-ecosystem/grpc-gateway/v2 v2.20.0/go.mod h1:P+Lt/0by1T8bfcF3z737NnSbmxQAppXMRziHUxPOC8k=
 github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542 h1:2VTzZjLZBgl62/EtslCrtky5vbi9dd7HrQPQIx6wqiw=
 github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542/go.mod h1:Ow0tF8D4Kplbc8s8sSb3V2oUCygFHVp8gC3Dn6U4MNI=
-github.com/jefferyjob/go-redislock v1.3.0 h1:y24Wmhl32afyqpYunmOkjkA8wIkHNtbS0te0uuGSNw4=
-github.com/jefferyjob/go-redislock v1.3.0/go.mod h1:gaj6bnxVGijZS66WYO8bLV4b4y3QzdoxevBr6GMM+tM=
+github.com/jefferyjob/go-redislock v1.4.0 h1:LLggHJaGRYYDEdQX8h4oMugLGVg9HciMgJpk/0nhuS4=
+github.com/jefferyjob/go-redislock v1.4.0/go.mod h1:nn0cXMIHkpFXi99/MKRdKRHF5ThFZlPG9drhVm38zW0=
 github.com/klauspost/compress v1.17.11 h1:In6xLpyWOi1+C7tXUUWv2ot1QvBjxevKAaI6IXrJmUc=
 github.com/klauspost/compress v1.17.11/go.mod h1:pMDklpSncoRMuLFrf1W9Ss9KT+0rH90U12bZKk7uwG0=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=

@@ -2,10 +2,10 @@ module github.com/jefferyjob/go-redislock/adapter/go-zero
 
 go 1.24.5
 
-replace github.com/jefferyjob/go-redislock => ../..
+replace github.com/jefferyjob/go-redislock@latest => ../..
 
 require (
-	github.com/jefferyjob/go-redislock v1.3.0
+	github.com/jefferyjob/go-redislock v1.4.0
 	github.com/zeromicro/go-zero v1.9.2
 )
 
