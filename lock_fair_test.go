@@ -3,9 +3,10 @@ package go_redislock
 import (
 	"context"
 	"errors"
-	"github.com/go-redis/redismock/v9"
 	"testing"
 	"time"
+
+	"github.com/go-redis/redismock/v9"
 )
 
 func TestFairLock(t *testing.T) {

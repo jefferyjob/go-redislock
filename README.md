@@ -38,35 +38,37 @@ package main
 import (
 	"context"
 	"fmt"
+
 	redislock "github.com/jefferyjob/go-redislock"
-	"github.com/jefferyjob/go-redislock/adapter"
+	adapter "github.com/jefferyjob/go-redislock/adapter/go-redis/v9"
 	"github.com/redis/go-redis/v9"
 )
 
 func main() {
-	// 创建 Redis 客户端适配器
-	rdbAdapter := adapter.MustNew(redis.NewClient(&redis.Options{
+	// Create a Redis client adapter
+	rdbAdapter := adapter.New(redis.NewClient(&redis.Options{
 		Addr: "localhost:6379",
 	}))
 
-	// 创建用于取消锁定操作的上下文
+	// Create a context for canceling lock operations
 	ctx := context.Background()
 
-	// 创建 RedisLock 对象
+	// Create a RedisLock object
 	lock := redislock.New(rdbAdapter, "test_key")
 
-	// 获取锁
+	// acquire lock
 	err := lock.Lock(ctx)
 	if err != nil {
-		fmt.Println("lock获取失败：", err)
+		fmt.Println("lock acquisition failed：", err)
 		return
 	}
-	defer lock.UnLock(ctx) // 解锁
+	defer lock.UnLock(ctx) // unlock
 
-	// 锁定期间执行任务
+	// Perform tasks during lockdown
 	// ...
-	fmt.Println("任务执行完成")
+	fmt.Println("task execution completed")
 }
+
 ```
 
 ### 配置选项
@@ -155,14 +157,14 @@ type RedisLockInter interface {
 ## Redis客户端支持
 go-redislock 提供高度可扩展的客户端适配机制，已内置支持以下主流 Redis 客户端，详细示例请参考 [examples](examples/adapter) 。
 
-| Redis客户端版本       | 包路径                                                 | 是否支持 |
-|------------------|-----------------------------------------------------| -------- |
-| go-redis v7      | `github.com/jefferyjob/go-redislock/adapter/v7`     | ✅        |
-| go-redis v8      | `github.com/jefferyjob/go-redislock/adapter/v8`     | ✅        | 
-| go-redis v9      | `github.com/jefferyjob/go-redislock/adapter/v9`     | ✅        | 
+| Redis客户端版本       | 包路径                                                | 是否支持 |
+|------------------|----------------------------------------------------| -------- |
+| go-redis v7      | `github.com/jefferyjob/go-redislock/adapter/v7`    | ✅        |
+| go-redis v8      | `github.com/jefferyjob/go-redislock/adapter/v8`    | ✅        | 
+| go-redis v9      | `github.com/jefferyjob/go-redislock/adapter/v9`    | ✅        | 
 | go-zero redis    | `github.com/jefferyjob/go-redislock/adapter/gozero` | ✅        | 
-| goframe v1 redis | `github.com/jefferyjob/go-redislock/adapter/gf/v1`  | ✅        |
-| goframe v2 redis | `github.com/jefferyjob/go-redislock/adapter/gf/v2`  | ✅        |
+| goframe v1 redis | `github.com/jefferyjob/go-redislock/adapter/gf`  | ✅        |
+| goframe v2 redis | `github.com/jefferyjob/go-redislock/adapter/gf/v2` | ✅        |
 
 如您使用的 Redis 客户端不在上述列表中，也可以实现接口 `RedisInter` 来接入任意 Redis 客户端。
 
