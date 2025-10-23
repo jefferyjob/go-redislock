@@ -1,3 +1,26 @@
+## v1.5.0
+- Manage adapter as an independent package [#108](https://github.com/jefferyjob/go-redislock/pull/108)
+- Update changelog file [#109](https://github.com/jefferyjob/go-redislock/pull/109)
+
+## v1.4.0
+- Bump github.com/zeromicro/go-zero from 1.8.5 to 1.9.0 [#85](https://github.com/jefferyjob/go-redislock/pull/85)
+- Set README default language to Chinese [#86](https://github.com/jefferyjob/go-redislock/pull/86)
+- Bump github.com/stretchr/testify from 1.10.0 to 1.11.0 [#87](https://github.com/jefferyjob/go-redislock/pull/87)
+- Update changelog file [#88](https://github.com/jefferyjob/go-redislock/pull/88)
+- Add read lock and write lock features [#89](https://github.com/jefferyjob/go-redislock/pull/89)
+- Docs update [#90](https://github.com/jefferyjob/go-redislock/pull/90)
+- Bump actions/setup-go from 5 to 6 [#91](https://github.com/jefferyjob/go-redislock/pull/91)
+- Bump github.com/redis/go-redis/v9 from 9.12.1 to 9.13.0 [#92](https://github.com/jefferyjob/go-redislock/pull/92)
+- Bump github.com/redis/go-redis/v9 from 9.13.0 to 9.14.0 [#96](https://github.com/jefferyjob/go-redislock/pull/96)
+- Bump github.com/zeromicro/go-zero from 1.9.0 to 1.9.1 [#97](https://github.com/jefferyjob/go-redislock/pull/97)
+- Add unit tests for read and write locks [#98](https://github.com/jefferyjob/go-redislock/pull/98)
+- Adjust logic due to [v9.15.1](https://github.com/redis/go-redis/releases/tag/v9.15.1) changes [#99](https://github.com/jefferyjob/go-redislock/pull/99)
+- Add and remove Lua scripts [#100](https://github.com/jefferyjob/go-redislock/pull/100)
+- Bump github/codeql-action from 3 to 4 [#103](https://github.com/jefferyjob/go-redislock/pull/103)
+- Bump github.com/redis/go-redis/v9 from 9.14.0 to 9.14.1 [#105](https://github.com/jefferyjob/go-redislock/pull/105)
+- Docs optimization [#107](https://github.com/jefferyjob/go-redislock/pull/107)
+
+
 ## v1.3.0
 - ci actions label configuration [#57](https://github.com/jefferyjob/go-redislock/pull/57)
 - change log update [#58](https://github.com/jefferyjob/go-redislock/pull/58)
