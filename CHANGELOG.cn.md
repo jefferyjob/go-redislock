@@ -1,3 +1,21 @@
+## v1.4.0
+- Bump github.com/zeromicro/go-zero from 1.8.5 to 1.9.0 by @dependabot[bot] in [#85](https://github.com/jefferyjob/go-redislock/pull/85)
+- 将 README 默认语言改为中文 by @jefferyjob in [#86](https://github.com/jefferyjob/go-redislock/pull/86)
+- Bump github.com/stretchr/testify from 1.10.0 to 1.11.0 by @dependabot[bot] in [#87](https://github.com/jefferyjob/go-redislock/pull/87)
+- 更新 changelog 文件 by @jefferyjob in [#88](https://github.com/jefferyjob/go-redislock/pull/88)
+- 新增读锁和写锁功能 by @jefferyjob in [#89](https://github.com/jefferyjob/go-redislock/pull/89)
+- 文档更新 by @jefferyjob in [#90](https://github.com/jefferyjob/go-redislock/pull/90)
+- Bump actions/setup-go from 5 to 6 by @dependabot[bot] in [#91](https://github.com/jefferyjob/go-redislock/pull/91)
+- Bump github.com/redis/go-redis/v9 from 9.12.1 to 9.13.0 by @dependabot[bot] in [#92](https://github.com/jefferyjob/go-redislock/pull/92)
+- Bump github.com/redis/go-redis/v9 from 9.13.0 to 9.14.0 by @dependabot[bot] in [#96](https://github.com/jefferyjob/go-redislock/pull/96)
+- Bump github.com/zeromicro/go-zero from 1.9.0 to 1.9.1 by @dependabot[bot] in [#97](https://github.com/jefferyjob/go-redislock/pull/97)
+- 为读锁和写锁增加单元测试代码 by @jefferyjob in [#98](https://github.com/jefferyjob/go-redislock/pull/98)
+- 因为 [v9.15.1](https://github.com/redis/go-redis/releases/tag/v9.15.1) 更新调整逻辑 by @jefferyjob in [#99](https://github.com/jefferyjob/go-redislock/pull/99)
+- 新增与移除 Lua 脚本 by @jefferyjob in [#100](https://github.com/jefferyjob/go-redislock/pull/100)
+- Bump github/codeql-action from 3 to 4 by @dependabot[bot] in [#103](https://github.com/jefferyjob/go-redislock/pull/103)
+- Bump github.com/redis/go-redis/v9 from 9.14.0 to 9.14.1 by @dependabot[bot] in [#105](https://github.com/jefferyjob/go-redislock/pull/105)
+- 文档优化 by @jefferyjob in [#107](https://github.com/jefferyjob/go-redislock/pull/107)
+
 ## v1.3.0
 - ci actions 标签配置 [#57](https://github.com/jefferyjob/go-redislock/pull/57)
 - 更新 change log [#58](https://github.com/jefferyjob/go-redislock/pull/58)
