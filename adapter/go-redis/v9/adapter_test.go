@@ -21,6 +21,10 @@ var (
 	luaDelScript = `return redis.call("DEL", KEYS[1])`
 )
 
+// Redis服务器测试
+// 下面的代码将借助 redis 服务器进行测试，可以更加方便的测试服务中的问题
+// 你可以实用下面的命令启动一个redis容器进行测试
+// docker run -d -p 63790:6379 --name go_redis_lock redis
 func getRedisClient() (redislock.RedisInter, *redis.Client) {
 	rdb := redis.NewClient(&redis.Options{
 		Addr: fmt.Sprintf("%s:%s", addr, port),
@@ -29,6 +33,7 @@ func getRedisClient() (redislock.RedisInter, *redis.Client) {
 	return rdbAdapter, rdb
 }
 
+// 适配器测试
 func TestAdapter(t *testing.T) {
 	adapter, _ := getRedisClient()
 	if adapter == nil {
@@ -136,6 +141,7 @@ func TestWLockByReadLock(t *testing.T) {
 	}
 }
 
+// 测试读锁可重入
 func TestWLockReentrant(t *testing.T) {
 	adapter, _ := getRedisClient()
 	if adapter == nil {
@@ -168,6 +174,7 @@ func TestWLockReentrant(t *testing.T) {
 	}
 }
 
+// 测试写锁抢夺读锁
 func TestRLockByWriteLock(t *testing.T) {
 	adapter, _ := getRedisClient()
 	if adapter == nil {
@@ -244,6 +251,7 @@ func TestRLockByWriteLock(t *testing.T) {
 	}
 }
 
+// 读锁的可重入能力
 func TestRLockReentrant(t *testing.T) {
 	adapter, _ := getRedisClient()
 	if adapter == nil {

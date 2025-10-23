@@ -3,11 +3,12 @@ package fair
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
-	redislock "github.com/jefferyjob/go-redislock"
 	"log"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
+	redislock "github.com/jefferyjob/go-redislock"
 )
 
 type Ticket struct {

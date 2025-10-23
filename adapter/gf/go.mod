@@ -2,12 +2,12 @@ module github.com/jefferyjob/go-redislock/adapter/gf
 
 go 1.24.5
 
+replace github.com/jefferyjob/go-redislock => ../..
+
 require (
 	github.com/gogf/gf v1.16.9
 	github.com/jefferyjob/go-redislock v1.3.0
 )
-
-replace github.com/jefferyjob/go-redislock => ../..
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect

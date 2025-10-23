@@ -3,8 +3,9 @@ package reentrant
 import (
 	"context"
 	"fmt"
-	redislock "github.com/jefferyjob/go-redislock"
 	"time"
+
+	redislock "github.com/jefferyjob/go-redislock"
 )
 
 type Order struct {
