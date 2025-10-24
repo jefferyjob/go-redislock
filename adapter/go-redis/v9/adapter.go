@@ -8,10 +8,10 @@ import (
 )
 
 type RedisAdapter struct {
-	client *redis.Client
+	client redis.UniversalClient
 }
 
-func New(client *redis.Client) redislock.RedisInter {
+func New(client redis.UniversalClient) redislock.RedisInter {
 	return &RedisAdapter{client: client}
 }
 
