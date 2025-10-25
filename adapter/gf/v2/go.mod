@@ -1,4 +1,4 @@
-module github.com/jefferyjob/go-redislock/adapter/gf/v2
+module github.com/jefferyjob/go-redislock/adapter/gf/V2
 
 go 1.24.5
 

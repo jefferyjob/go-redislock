@@ -1,8 +1,8 @@
-module github.com/jefferyjob/go-redislock/adapter/gf
+module github.com/jefferyjob/go-redislock/adapter/gf/V1
 
 go 1.24.5
 
-replace github.com/jefferyjob/go-redislock => ../..
+replace github.com/jefferyjob/go-redislock => ../../..
 
 require (
 	github.com/gogf/gf v1.16.9
