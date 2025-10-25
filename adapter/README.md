@@ -8,21 +8,21 @@ If the Redis client you are using is not in the above list, you can also impleme
 - v9
 ```
 import (
-	adapter "github.com/jefferyjob/go-redislock/adapter/go-redis/v9"
+	adapter "github.com/jefferyjob/go-redislock/adapter/go-redis/V9"
 )
 ```
 
 - v8
 ```
 import (
-	adapter "github.com/jefferyjob/go-redislock/adapter/go-redis/v8"
+	adapter "github.com/jefferyjob/go-redislock/adapter/go-redis/V8"
 )
 ```
 
 - v7
 ```
 import (
-	adapter "github.com/jefferyjob/go-redislock/adapter/go-redis/v7"
+	adapter "github.com/jefferyjob/go-redislock/adapter/go-redis/V7"
 )
 ```
 
@@ -37,13 +37,13 @@ import (
 - v2
 ```
 import (
-	adapter "github.com/jefferyjob/go-redislock/adapter/gf/v2"
+	adapter "github.com/jefferyjob/go-redislock/adapter/gf/V2"
 )
 ```
 
 - v1
 ```
 import (
-	adapter "github.com/jefferyjob/go-redislock/adapter/gf"
+	adapter "github.com/jefferyjob/go-redislock/adapter/gf/V1"
 )
 ```

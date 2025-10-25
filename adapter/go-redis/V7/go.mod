@@ -1,4 +1,4 @@
-module github.com/jefferyjob/go-redislock/adapter/go-redis/v7
+module github.com/jefferyjob/go-redislock/adapter/go-redis/V7
 
 go 1.24.5
 
