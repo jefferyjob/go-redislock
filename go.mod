@@ -8,7 +8,7 @@ require (
 	github.com/go-redis/redismock/v9 v9.2.0
 	github.com/golang/mock v1.6.0
 	github.com/google/uuid v1.6.0
-	github.com/redis/go-redis/v9 v9.14.1
+	github.com/redis/go-redis/v9 v9.16.0
 	github.com/stretchr/testify v1.11.1
 )
 
