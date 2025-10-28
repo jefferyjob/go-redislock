@@ -29,7 +29,7 @@ import (
 ### go-zero
 ```
 import (
-	adapter "github.com/jefferyjob/go-redislock/adapter/go-zero"
+	adapter "github.com/jefferyjob/go-redislock/adapter/go-zero/V1"
 )
 ```
 
