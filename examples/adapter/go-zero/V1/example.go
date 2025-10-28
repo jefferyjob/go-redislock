@@ -1,8 +1,9 @@
-package v1
+package V1
 
 import (
 	"context"
 	"fmt"
+
 	redislock "github.com/jefferyjob/go-redislock"
 	adapter "github.com/jefferyjob/go-redislock/adapter/go-zero/V1"
 	"github.com/zeromicro/go-zero/core/stores/redis"
