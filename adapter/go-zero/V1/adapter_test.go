@@ -1,4 +1,4 @@
-package go_zero
+package V1
 
 import (
 	"context"
@@ -8,7 +8,6 @@ import (
 	"time"
 
 	redislock "github.com/jefferyjob/go-redislock"
-	_ "github.com/jefferyjob/go-redislock/adapter/gozero"
 	"github.com/zeromicro/go-zero/core/stores/redis"
 )
 

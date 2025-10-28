@@ -1,14 +1,14 @@
-module github.com/jefferyjob/go-redislock/adapter/gf/v2
+module github.com/jefferyjob/go-redislock/adapter/gf/V2
 
 go 1.24.5
+
+replace github.com/jefferyjob/go-redislock => ../../..
 
 require (
 	github.com/gogf/gf/contrib/nosql/redis/v2 v2.9.4
 	github.com/gogf/gf/v2 v2.9.4
 	github.com/jefferyjob/go-redislock v1.3.0
 )
-
-replace github.com/jefferyjob/go-redislock => ../../..
 
 require (
 	github.com/BurntSushi/toml v1.5.0 // indirect
