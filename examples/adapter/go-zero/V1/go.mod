@@ -1,14 +1,10 @@
-module github.com/jefferyjob/go-redislock/examples/adapter/go-zero
+module github.com/jefferyjob/go-redislock/examples/adapter/go-zero/V1
 
 go 1.24.5
 
-// For local testing, please ignore this configuration
-//replace github.com/jefferyjob/go-redislock => ../../..
-//replace github.com/jefferyjob/go-redislock/adapter/go-zero/V1  => ../../../adapter/go-zero/V1
-
 require (
-	github.com/jefferyjob/go-redislock v1.5.0
-	github.com/jefferyjob/go-redislock/adapter/go-zero/V1 v0.0.0-20251028054701-d384e9108091
+	github.com/jefferyjob/go-redislock v1.6.0
+	github.com/jefferyjob/go-redislock/adapter/go-zero/V1 v0.0.0-20251028060203-3d019e2c131a
 	github.com/zeromicro/go-zero v1.9.2
 )
 
@@ -34,16 +30,16 @@ require (
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/redis/go-redis/v9 v9.14.1 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
-	go.opentelemetry.io/otel v1.32.0 // indirect
+	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.17.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.24.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.24.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.24.0 // indirect
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.24.0 // indirect
 	go.opentelemetry.io/otel/exporters/zipkin v1.24.0 // indirect
-	go.opentelemetry.io/otel/metric v1.32.0 // indirect
-	go.opentelemetry.io/otel/sdk v1.32.0 // indirect
-	go.opentelemetry.io/otel/trace v1.32.0 // indirect
+	go.opentelemetry.io/otel/metric v1.24.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.24.0 // indirect
+	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	golang.org/x/net v0.38.0 // indirect
