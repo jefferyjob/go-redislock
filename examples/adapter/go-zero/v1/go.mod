@@ -3,12 +3,12 @@ module github.com/jefferyjob/go-redislock/examples/adapter/go-zero
 go 1.24.5
 
 // For local testing, please ignore this configuration
-replace github.com/jefferyjob/go-redislock => ../../..
-replace github.com/jefferyjob/go-redislock/adapter/go-zero/V1  => ../../../adapter/go-zero/V1
+//replace github.com/jefferyjob/go-redislock => ../../..
+//replace github.com/jefferyjob/go-redislock/adapter/go-zero/V1  => ../../../adapter/go-zero/V1
 
 require (
-	github.com/jefferyjob/go-redislock v1.4.0
-	//github.com/jefferyjob/go-redislock/adapter/go-zero/V1 v0.0.0-20251022110012-7fa8953ae22a
+	github.com/jefferyjob/go-redislock v1.5.0
+	github.com/jefferyjob/go-redislock/adapter/go-zero/V1 v0.0.0-20251028054701-d384e9108091
 	github.com/zeromicro/go-zero v1.9.2
 )
 
