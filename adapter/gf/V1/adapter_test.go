@@ -12,30 +12,22 @@ import (
 )
 
 var (
-	addr         = "127.0.0.1"
-	port         = "63790"
-	luaSetScript = `return redis.call("SET", KEYS[1], ARGV[1])`
-	luaGetScript = `return redis.call("GET", KEYS[1])`
-	luaDelScript = `return redis.call("DEL", KEYS[1])`
+	addr = "127.0.0.1"
+	port = "63790"
 )
 
-func getRedisClient() (redislock.RedisInter, *gredis.Redis) {
+func getRedisClient() redislock.RedisInter {
 	prot, _ := strconv.Atoi(port)
 	rdb := gredis.New(&gredis.Config{
 		Host: addr,
 		Port: prot,
 	})
 
-	adapter := New(rdb)
-	return adapter, rdb
+	return New(rdb)
 }
 
 func TestAdapter(t *testing.T) {
-	adapter, _ := getRedisClient()
-	if adapter == nil {
-		log.Println("Github actions skip this test")
-		return
-	}
+	adapter := getRedisClient()
 
 	ctx := context.Background()
 	key := "test_key"

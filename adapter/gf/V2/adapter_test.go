@@ -13,30 +13,26 @@ import (
 )
 
 var (
-	addr         = "127.0.0.1"
-	port         = "63790"
-	luaSetScript = `return redis.call("SET", KEYS[1], ARGV[1])`
-	luaGetScript = `return redis.call("GET", KEYS[1])`
-	luaDelScript = `return redis.call("DEL", KEYS[1])`
+	addr = "127.0.0.1"
+	port = "63790"
 )
 
-func getRedisClient() (redislock.RedisInter, *gredis.Redis) {
+func getRedisClient() (redislock.RedisInter, error) {
 	rdb, err := gredis.New(&gredis.Config{
 		Address: fmt.Sprintf("%s:%s", addr, port),
 	})
 	if err != nil {
-		return nil, nil
+		return nil, err
 	}
 
-	adapter := New(rdb)
-	return adapter, rdb
+	return New(rdb), nil
 }
 
 // gf v2 适配器测试
 func TestAdapter(t *testing.T) {
-	adapter, _ := getRedisClient()
-	if adapter == nil {
-		log.Println("Github actions skip this test")
+	adapter, err := getRedisClient()
+	if err != nil {
+		t.Errorf("Failed to create Redis client: %v", err)
 		return
 	}
 
@@ -57,7 +53,7 @@ func TestAdapter(t *testing.T) {
 
 	// 线程1加锁-预期成功
 	lock := redislock.New(adapter, key)
-	err := lock.Lock(ctx)
+	err = lock.Lock(ctx)
 	if err != nil {
 		t.Errorf("Lock() returned unexpected error: %v", err)
 		return
