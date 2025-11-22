@@ -1,6 +1,6 @@
 # go-redislock
 
-[![Go](https://img.shields.io/badge/Go->=1.24-green)](https://go.dev)
+[![Go](https://img.shields.io/badge/Go->=1.21-green)](https://go.dev)
 [![Release](https://img.shields.io/github/v/release/jefferyjob/go-redislock.svg)](https://github.com/jefferyjob/go-redislock/releases)
 [![Action](https://github.com/jefferyjob/go-redislock/actions/workflows/go.yml/badge.svg)](https://github.com/jefferyjob/go-redislock/actions/workflows/go.yml)
 [![Report](https://goreportcard.com/badge/github.com/jefferyjob/go-redislock)](https://goreportcard.com/report/github.com/jefferyjob/go-redislock)
