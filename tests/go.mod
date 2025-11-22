@@ -4,10 +4,10 @@ go 1.24.5
 
 toolchain go1.24.10
 
-//replace github.com/jefferyjob/go-redislock@latest => ..
+replace github.com/jefferyjob/go-redislock@latest => ..
 
 require (
-	github.com/jefferyjob/go-redislock v1.6.1-0.20251122070819-0e374055d35c
+	github.com/jefferyjob/go-redislock v1.6.1-0.20251122073311-69a29316925a
 	github.com/jefferyjob/go-redislock/adapter/go-redis/v9 v9.0.0-20251023074556-1d78f01c9a96
 	github.com/redis/go-redis/v9 v9.17.0
 	github.com/stretchr/testify v1.11.1

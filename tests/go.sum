@@ -10,8 +10,8 @@ github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f h1:lO4WD4F/r
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cuUVRXasLTGF7a8hSLbxyZXjz+1KgoB3wDUb6vlszIc=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
-github.com/jefferyjob/go-redislock v1.6.1-0.20251122070819-0e374055d35c h1:DTzFx+VaMRrKOp3Dlhp3A0qhGPp+KoRHoZiF/JGPbzE=
-github.com/jefferyjob/go-redislock v1.6.1-0.20251122070819-0e374055d35c/go.mod h1:PU8b2eTZnQFWNczgDTKponxnbnk/uQHGLmy4a72aLUI=
+github.com/jefferyjob/go-redislock v1.6.1-0.20251122073311-69a29316925a h1:oeKHTy11V263SYBgAOK1/E/usTc61rlQDuYD0vkhuJ0=
+github.com/jefferyjob/go-redislock v1.6.1-0.20251122073311-69a29316925a/go.mod h1:PU8b2eTZnQFWNczgDTKponxnbnk/uQHGLmy4a72aLUI=
 github.com/jefferyjob/go-redislock/adapter/go-redis/v9 v9.0.0-20251023074556-1d78f01c9a96 h1:flj5GKUTIrtjp+PotNEOzUrUDjBWJ3dHNF8skWpDeSM=
 github.com/jefferyjob/go-redislock/adapter/go-redis/v9 v9.0.0-20251023074556-1d78f01c9a96/go.mod h1:ncPClQ1Q1/fQB2/sRA6V0US2GjRo+VsViGZLta3rApM=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
