@@ -1,12 +1,12 @@
 module github.com/jefferyjob/go-redislock/adapter/go-zero/V1
 
-go 1.24.5
+go 1.21
 
 replace github.com/jefferyjob/go-redislock => ../../..
 
 require (
-	github.com/jefferyjob/go-redislock v1.5.0
-	github.com/zeromicro/go-zero v1.9.2
+	github.com/jefferyjob/go-redislock v0.0.0-00010101000000-000000000000
+	github.com/zeromicro/go-zero v1.9.3
 )
 
 require (
@@ -29,7 +29,7 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.62.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	github.com/redis/go-redis/v9 v9.17.0 // indirect
+	github.com/redis/go-redis/v9 v9.16.0 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	go.opentelemetry.io/otel v1.24.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.17.0 // indirect
@@ -43,9 +43,9 @@ require (
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.opentelemetry.io/proto/otlp v1.3.1 // indirect
 	go.uber.org/automaxprocs v1.6.0 // indirect
-	golang.org/x/net v0.38.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
-	golang.org/x/text v0.23.0 // indirect
+	golang.org/x/net v0.35.0 // indirect
+	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/text v0.22.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240711142825-46eb208f015d // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240701130421-f6361c86f094 // indirect
 	google.golang.org/grpc v1.65.0 // indirect
