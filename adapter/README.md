@@ -33,17 +33,3 @@ import (
 )
 ```
 
-### goframe
-- v2
-```
-import (
-	adapter "github.com/jefferyjob/go-redislock/adapter/gf/V2"
-)
-```
-
-- v1
-```
-import (
-	adapter "github.com/jefferyjob/go-redislock/adapter/gf/V1"
-)
-```

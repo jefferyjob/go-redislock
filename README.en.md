@@ -21,7 +21,7 @@ We implemented the following key capabilities:
 - 🧵Read lock (multiple readers access concurrently, mutually exclusive writers)
 - ✍️Write lock (exclusive access to a resource)
 - 🔄 Manual and automatic renewal
-- ✅ Compatibility with multiple Redis clients (v7/v8/v9, go-zero, goframe)
+- ✅ Compatibility with multiple Redis clients (v7/v8/v9, go-zero)
 
 ## Quick start
 
@@ -161,8 +161,6 @@ go-redislock provides a highly scalable client adaptation mechanism, and has bui
 | go-redis v8      | `github.com/jefferyjob/go-redislock/adapter/go-redis/V8` | ✅        | 
 | go-redis v9      | `github.com/jefferyjob/go-redislock/adapter/go-redis/V9` | ✅        | 
 | go-zero redis    | `github.com/jefferyjob/go-redislock/adapter/go-zero/V1`  | ✅        | 
-| goframe v1 redis | `github.com/jefferyjob/go-redislock/adapter/gf/V1`       | ✅        |
-| goframe v2 redis | `github.com/jefferyjob/go-redislock/adapter/gf/V2`       | ✅        |
 
 If the Redis client you are using is not in the above list, you can also implement the interface `RedisInter` to connect to any Redis client.
 
