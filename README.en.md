@@ -20,7 +20,6 @@ We implemented the following key capabilities:
 - ⚖️ Fair locks (FIFO order)
 - 🧵Read lock (multiple readers access concurrently, mutually exclusive writers)
 - ✍️Write lock (exclusive access to a resource)
-- 【Coming Soon】🔗Multilock (Multi-Lock) (multiple locks must be acquired simultaneously, and all successful acquisitions are considered a lock)
 - 🔄 Manual and automatic renewal
 - ✅ Compatibility with multiple Redis clients (v7/v8/v9, go-zero, goframe)
 
