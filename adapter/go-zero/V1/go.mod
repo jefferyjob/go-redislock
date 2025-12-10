@@ -5,7 +5,7 @@ go 1.21
 replace github.com/jefferyjob/go-redislock => ../../..
 
 require (
-	github.com/jefferyjob/go-redislock v0.0.0-00010101000000-000000000000
+	github.com/jefferyjob/go-redislock v1.7.0-beta
 	github.com/zeromicro/go-zero v1.9.3
 )
 

@@ -6,7 +6,7 @@ replace github.com/jefferyjob/go-redislock => ../../..
 
 require (
 	github.com/gogf/gf v1.16.9
-	github.com/jefferyjob/go-redislock v0.0.0-00010101000000-000000000000
+	github.com/jefferyjob/go-redislock v1.7.0-beta
 )
 
 require (
