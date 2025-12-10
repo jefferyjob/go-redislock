@@ -1,4 +1,4 @@
-module github.com/jefferyjob/go-redislock/tests
+module tests
 
 go 1.21
 
