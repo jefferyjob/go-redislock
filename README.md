@@ -39,7 +39,7 @@ import (
 	"fmt"
 
 	redislock "github.com/jefferyjob/go-redislock"
-	adapter "github.com/jefferyjob/go-redislock/adapter/go-redis/v9"
+	adapter "github.com/jefferyjob/go-redislock/adapter/go-redis/V9"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -154,7 +154,7 @@ type RedisLockInter interface {
 ```
 
 ## Redis客户端支持
-go-redislock 提供高度可扩展的客户端适配机制，已内置支持以下主流 Redis 客户端，详细示例请参考 [examples](examples/adapter) 。
+go-redislock 提供高度可扩展的客户端适配机制，已内置支持以下主流 Redis 客户端，详细示例请参考 [examples](examples) 。
 
 | Redis客户端版本       | 包路径                                                      | 是否支持 |
 |------------------|----------------------------------------------------------| -------- |

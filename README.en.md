@@ -39,7 +39,7 @@ import (
 	"fmt"
 
 	redislock "github.com/jefferyjob/go-redislock"
-	adapter "github.com/jefferyjob/go-redislock/adapter/go-redis/v9"
+	adapter "github.com/jefferyjob/go-redislock/adapter/go-redis/V9"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -153,7 +153,7 @@ type RedisLockInter interface {
 ```
 
 ## Redis client support
-go-redislock provides a highly scalable client adaptation mechanism, and has built-in support for the following mainstream Redis clients. For detailed examples, please refer to [examples](examples/adapter) .
+go-redislock provides a highly scalable client adaptation mechanism, and has built-in support for the following mainstream Redis clients. For detailed examples, please refer to [examples](examples) .
 
 | Redis Client Version | Package path                                             | Supported |
 |------------------|----------------------------------------------------------| -------- |
