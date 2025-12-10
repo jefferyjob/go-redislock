@@ -28,6 +28,9 @@ go-redislock 是一个用于 Go 的库，用于使用 Redis 作为后端存储�
 ### 安装
 ```bash
 go get -u github.com/jefferyjob/go-redislock
+
+# 根据所使用的 Redis 客户端选择匹配的适配器。
+go get -u github.com/jefferyjob/go-redislock/adapter/go-redis/V9
 ```
 
 ### 使用Demo
@@ -153,7 +156,7 @@ type RedisLockInter interface {
 }
 ```
 
-## Redis客户端支持
+## Redis客户端适配器支持
 go-redislock 提供高度可扩展的客户端适配机制，已内置支持以下主流 Redis 客户端，详细示例请参考 [examples](examples) 。
 
 | Redis客户端版本       | 包路径                                                      | 是否支持 |
