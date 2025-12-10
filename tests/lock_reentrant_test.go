@@ -169,6 +169,7 @@ func Test_SpinLock(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			lock := redislock.New(adapter, tt.inputKey, redislock.WithToken(tt.inputToken))
 
 			if tt.before != nil {
@@ -179,7 +180,9 @@ func Test_SpinLock(t *testing.T) {
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("expected error %v, got %v", tt.wantErr, err)
 			}
-			defer lock.UnLock(ctx)
+			defer func() {
+				_ = lock.UnLock(ctx)
+			}()
 		})
 	}
 }
@@ -219,7 +222,9 @@ func Test_LockRenew(t *testing.T) {
 			lock := redislock.New(adapter, tt.inputKey, redislock.WithToken(tt.inputToken))
 			err := lock.Lock(ctx)
 			require.NoError(t, err)
-			defer lock.UnLock(ctx)
+			defer func() {
+				_ = lock.UnLock(ctx)
+			}()
 
 			go func() {
 				time.Sleep(time.Second * 2)
@@ -266,6 +271,7 @@ func Test_LockAutoRenew(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			lock := redislock.New(adapter, tt.inputKey,
 				redislock.WithToken(tt.inputToken),
 				redislock.WithAutoRenew(),
