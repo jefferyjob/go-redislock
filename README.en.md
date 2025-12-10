@@ -28,6 +28,9 @@ We implemented the following key capabilities:
 ### Install
 ```bash
 go get -u github.com/jefferyjob/go-redislock
+
+# Choose the matching adapter based on the Redis client you are using.
+go get -u github.com/jefferyjob/go-redislock/adapter/go-redis/V9
 ```
 
 ### Use Demo
@@ -152,7 +155,7 @@ type RedisLockInter interface {
 }
 ```
 
-## Redis client support
+## Redis client adapter supports
 go-redislock provides a highly scalable client adaptation mechanism, and has built-in support for the following mainstream Redis clients. For detailed examples, please refer to [examples](examples) .
 
 | Redis Client Version | Package path                                             | Supported |
