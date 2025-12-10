@@ -21,7 +21,7 @@ go-redislock 是一个用于 Go 的库，用于使用 Redis 作为后端存储�
 - 🧵读锁（多个读者并发访问，互斥写者）
 - ✍️写锁（独占访问资源）
 - 🔄 手动续期与自动续期
-- ✅ 多 Redis 客户端适配（v7/v8/v9、go-zero、goframe）
+- ✅ 多 Redis 客户端适配（v7/v8/v9、go-zero）
 
 ## 快速开始
 
@@ -162,8 +162,6 @@ go-redislock 提供高度可扩展的客户端适配机制，已内置支持以�
 | go-redis v8      | `github.com/jefferyjob/go-redislock/adapter/go-redis/V8` | ✅        | 
 | go-redis v9      | `github.com/jefferyjob/go-redislock/adapter/go-redis/V9` | ✅        | 
 | go-zero redis    | `github.com/jefferyjob/go-redislock/adapter/go-zero/V1`  | ✅        | 
-| goframe v1 redis | `github.com/jefferyjob/go-redislock/adapter/gf/V1`       | ✅        |
-| goframe v2 redis | `github.com/jefferyjob/go-redislock/adapter/gf/V2`       | ✅        |
 
 如您使用的 Redis 客户端不在上述列表中，也可以实现接口 `RedisInter` 来接入任意 Redis 客户端。
 
