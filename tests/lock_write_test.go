@@ -52,8 +52,9 @@ func Test_WLockByReadLock(t *testing.T) {
 				if !errors.Is(err, tt.wantRErr) {
 					t.Errorf("Failed to Rlock: %v", err)
 				}
-				time.Sleep(time.Second * 2) // 确保读锁保持执行，留给写锁足够的事情抢夺
 				defer lock.RUnLock(ctx)
+				time.Sleep(time.Second * 2) // 确保读锁保持执行，留给写锁足够的事情抢夺
+
 			}
 
 			// 线程2：写锁
@@ -63,10 +64,10 @@ func Test_WLockByReadLock(t *testing.T) {
 				ctx := context.Background()
 				lock := redislock.New(adapter, tt.inputKey, redislock.WithToken(tt.inputWToken))
 				err := lock.WLock(ctx)
+				defer lock.WUnLock(ctx)
 				if !errors.Is(err, tt.wantWErr) {
 					t.Errorf("Failed to Wlock: %v", err)
 				}
-				defer lock.WUnLock(ctx)
 			}
 
 			wg.Add(2)

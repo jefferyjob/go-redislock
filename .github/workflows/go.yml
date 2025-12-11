@@ -58,10 +58,17 @@ jobs:
 
       # Test Unit
       - name: Test
-        run: make test
+        run: go test -v ./...
 
       - name: Test and create coverage file
-        run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+        run: |
+          # 根目录生成 coverage 文件
+          # go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+          # tests 目录生成 coverage 文件
+          cd tests
+          go test -coverprofile=coverage.out -covermode=atomic ./...
+          cp coverage.out ..
+          cd -
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
@@ -75,7 +82,11 @@ jobs:
           go install gotest.tools/gotestsum@v1.12.0
 
       - name: Run tests and generate coverage report
-        run: gotestsum --junitfile junit.xml
+        run: |
+          # gotestsum --junitfile junit.xml
+          cd tests
+          gotestsum --junitfile ../junit.xml
+          cd -
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}
