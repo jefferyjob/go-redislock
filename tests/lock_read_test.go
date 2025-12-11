@@ -103,6 +103,8 @@ func TestRLockReentrant(t *testing.T) {
 		if err != nil {
 			t.Errorf("Failed to lock: %v", err)
 		}
+		defer lock.RUnLock(ctx)
+
 		time.Sleep(time.Second * 1)
 	}
 }

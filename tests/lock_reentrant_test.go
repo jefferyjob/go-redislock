@@ -48,10 +48,10 @@ func Test_Lock(t *testing.T) {
 			ctx := context.Background()
 			lock := redislock.New(adapter, tt.inputKey, redislock.WithToken(tt.inputToken))
 			err := lock.Lock(ctx)
+			defer lock.UnLock(ctx)
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("expected error %v, got %v", tt.wantErr, err)
 			}
-			defer lock.UnLock(ctx)
 		})
 	}
 }
@@ -68,14 +68,14 @@ func Test_UnLock(t *testing.T) {
 	}{
 		{
 			name:       "释放锁对象-正常",
-			inputKey:   "test_key",
-			inputToken: "test_token",
+			inputKey:   "test_unlock_key1",
+			inputToken: "test_unlock_token1",
 			wantErr:    nil,
 		},
 		{
 			name:       "创建锁对象-失败",
-			inputKey:   "test_key",
-			inputToken: "test_token",
+			inputKey:   "test_unlock_key2",
+			inputToken: "test_unlock_token2",
 			between: func(inputKey string, inputToken string) {
 				ctx := context.Background()
 				lock := redislock.New(adapter, inputKey, redislock.WithToken(inputToken))
@@ -177,12 +177,10 @@ func Test_SpinLock(t *testing.T) {
 			}
 
 			err := lock.SpinLock(ctx, tt.inputTimeout)
+			defer lock.UnLock(ctx)
 			if !errors.Is(err, tt.wantErr) {
 				t.Errorf("expected error %v, got %v", tt.wantErr, err)
 			}
-			defer func() {
-				_ = lock.UnLock(ctx)
-			}()
 		})
 	}
 }
@@ -200,17 +198,17 @@ func Test_LockRenew(t *testing.T) {
 	}{
 		{
 			name:            "锁手动续期成功",
-			inputKey:        "test_key",
-			inputToken:      "token_ok",
-			inputRenewToken: "token_ok",
+			inputKey:        "test_LockRenew_key1",
+			inputToken:      "token_LockRenew_ok1",
+			inputRenewToken: "token_LockRenew_ok1",
 			inputSleep:      6 * time.Second,
 			wantErr:         nil,
 		},
 		{
 			name:            "锁手动续期失败-token不匹配",
-			inputKey:        "test_key",
-			inputToken:      "token_fail",
-			inputRenewToken: "token_other",
+			inputKey:        "test_LockRenew_key2",
+			inputToken:      "token_LockRenew_fail2",
+			inputRenewToken: "token_LockRenew_other2",
 			inputSleep:      6 * time.Second,
 			wantErr:         redislock.ErrLockRenewFailed,
 		},
