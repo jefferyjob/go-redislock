@@ -10,6 +10,8 @@ github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f h1:lO4WD4F/r
 github.com/dgryski/go-rendezvous v0.0.0-20200823014737-9f7001d12a5f/go.mod h1:cuUVRXasLTGF7a8hSLbxyZXjz+1KgoB3wDUb6vlszIc=
 github.com/google/uuid v1.6.0 h1:NIvaJDMOsjHA8n1jAhLSgzrAzy1Hgr+hNrb57e+94F0=
 github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpEw/LqOeaOT+nhxU+yHo=
+github.com/jefferyjob/go-redislock v1.7.0-beta.2 h1:LIGvjvSQBpv3kV1Q99AZDJK1JryrAN1fuEB4pp6hTek=
+github.com/jefferyjob/go-redislock v1.7.0-beta.2/go.mod h1:pCwZqMtJeXv6WxvuiYAGHXnTIcFMUlvXsSFGkLFrhVE=
 github.com/jefferyjob/go-redislock/adapter/go-redis/V9 v0.0.0-20251210060753-5b2e8d62842e h1:bEuJQ2y9VA0VnBcqbzJdrRUIN1RbPLs8alSneZ4R4Xs=
 github.com/jefferyjob/go-redislock/adapter/go-redis/V9 v0.0.0-20251210060753-5b2e8d62842e/go.mod h1:ra4EsXnZcd0mLEo7M7r0nY7Uh2acvTVaSfUBpU/5g38=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
