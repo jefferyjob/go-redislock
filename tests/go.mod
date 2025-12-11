@@ -5,7 +5,7 @@ go 1.21
 //replace github.com/jefferyjob/go-redislock => ..
 
 require (
-	github.com/jefferyjob/go-redislock v1.7.0-beta.1
+	github.com/jefferyjob/go-redislock v1.7.0-beta.2
 	github.com/jefferyjob/go-redislock/adapter/go-redis/V9 v0.0.0-20251210060753-5b2e8d62842e
 	github.com/redis/go-redis/v9 v9.17.2
 	github.com/stretchr/testify v1.11.1
