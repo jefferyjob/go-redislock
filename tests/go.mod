@@ -2,7 +2,7 @@ module tests
 
 go 1.21
 
-replace github.com/jefferyjob/go-redislock => ..
+//replace github.com/jefferyjob/go-redislock => ..
 
 require (
 	github.com/jefferyjob/go-redislock v1.7.0-beta.1
