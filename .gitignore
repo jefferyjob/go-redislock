@@ -20,7 +20,7 @@ coverage.txt
 vendor/
 
 # Go workspace file
-go.work
+#go.work
 
 # Edit Dir
 .idea
