@@ -58,15 +58,22 @@ jobs:
 
       # Test Unit
       - name: Test
-        run: make test
+        run: go test -v ./...
 
       - name: Test and create coverage file
         run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+      - name: Generate coverage from tests/ module
+        run: |
+          cd tests
+          go test -coverprofile=coverage.out -covermode=atomic ./...
+          cd -
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
         with:
           token: ${{secrets.CODECOV_TOKEN}}
+          files: tests/coverage.out
 
       # Test Analytics
       - name: Install dependencies
@@ -74,8 +81,14 @@ jobs:
           go install github.com/jstemmer/go-junit-report@v1.0.0
           go install gotest.tools/gotestsum@v1.12.0
 
-      - name: Run tests and generate coverage report
-        run: gotestsum --junitfile junit.xml
+#      - name: Run tests and generate coverage report
+#        run: gotestsum --junitfile junit.xml
+
+      - name: Run tests and generate junit.xml
+        run: |
+          cd tests
+          gotestsum --junitfile ../junit.xml
+          cd -
 
       - name: Upload test results to Codecov
         if: ${{ !cancelled() }}

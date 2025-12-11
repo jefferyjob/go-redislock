@@ -1,9 +1,0 @@
-go 1.21
-
-use (
-	.
-	./adapter/go-redis/V7
-	./adapter/go-redis/V8
-	./adapter/go-redis/V9
-	./adapter/go-zero/V1
-)
