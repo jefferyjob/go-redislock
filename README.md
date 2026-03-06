@@ -2,7 +2,7 @@
 <p align="center">
     <picture>
         <source media="(prefers-color-scheme: light)" srcset="images/logo.png">
-        <img src="images/logo.png" alt="go-redislock" width="700">
+        <img src="images/logo.png" alt="go-redislock" width="600">
     </picture>
 </p>
 
