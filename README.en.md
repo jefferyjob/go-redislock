@@ -1,4 +1,10 @@
 # go-redislock
+<p align="center">
+    <picture>
+        <source media="(prefers-color-scheme: light)" srcset="images/logo.png">
+        <img src="images/logo.png" alt="go-redislock" width="700">
+    </picture>
+</p>
 
 [![Go](https://img.shields.io/badge/Go->=1.21-green)](https://go.dev)
 [![Release](https://img.shields.io/github/v/release/jefferyjob/go-redislock.svg)](https://github.com/jefferyjob/go-redislock/releases)
