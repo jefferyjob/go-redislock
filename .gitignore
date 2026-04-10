@@ -28,3 +28,9 @@ go.work
 .DS_Store
 .vscode
 .fleet
+
+# AI
+.claude
+.agents
+CLAUDE.md
+AGENTS.md
