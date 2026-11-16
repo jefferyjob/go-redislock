@@ -1,0 +1,31 @@
+# 独立的静态分析工作流：golangci-lint（README 中的 Lint 徽章即本 workflow 的状态徽章）。
+# go.yml 中的 "Lint" 步骤仅包含 go vet 与 go mod tidy 检查，不在此重复。
+name: golangci-lint
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: stable
+          # golangci-lint-action 内置分析缓存，官方建议关闭 setup-go 的模块缓存以免冲突
+          cache: false
+
+      # 仓库无 .golangci.yml 配置文件，使用 golangci-lint 默认规则（与 make lint 一致）
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: latest

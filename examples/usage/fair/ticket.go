@@ -15,8 +15,8 @@ type Ticket struct {
 	rdb redislock.RedisInter
 }
 
-// 并发模拟 50 位用户抢票
-func (t *Ticket) buy(ctx context.Context) {
+// Buy 并发模拟 50 位用户抢票
+func (t *Ticket) Buy(ctx context.Context) {
 	lockKey := "fair:lock"
 
 	lock := redislock.New(
@@ -42,7 +42,9 @@ func (t *Ticket) buy(ctx context.Context) {
 			}
 
 			// 下面开始处于临界区，只有队首线程能执行
-			defer lock.FairUnLock(ctx, requestId)
+			defer func() {
+				_ = lock.FairUnLock(ctx, requestId)
+			}()
 
 			// 检查剩余票数
 			// 扣减库存 / 为该用户锁定票资源

@@ -24,7 +24,9 @@ func (o *Order) CreateOrder(ctx context.Context, userId int64, productId int64) 
 	if err := lock.Lock(ctx); err != nil {
 		return fmt.Errorf("操作过于频繁，请稍后再试")
 	}
-	defer lock.UnLock(ctx)
+	defer func() {
+		_ = lock.UnLock(ctx)
+	}()
 
 	// 检查是否已存在订单
 	// 创建新订单
