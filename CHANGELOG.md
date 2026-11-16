@@ -19,7 +19,7 @@
 - Bump github/codeql-action from 4.38.2 to 4.39.1 [#151](https://github.com/jefferyjob/go-redislock/pull/151)
 - Bump github/codeql-action from 4.39.1 to 4.39.3 [#152](https://github.com/jefferyjob/go-redislock/pull/152)
 - Update .gitignore [#153](https://github.com/jefferyjob/go-redislock/pull/153)
-- Fix test isolation issues and data race in integration tests
+- Fix test isolation issues and data race in integration tests [#154](https://github.com/jefferyjob/go-redislock/pull/154)
 
 > Note: v1.5.0 and v1.6.0 have been retracted due to adapter package name errors. Please use v1.7.0 or later.
 

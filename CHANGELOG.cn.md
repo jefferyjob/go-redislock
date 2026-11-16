@@ -19,7 +19,7 @@
 - Bump github/codeql-action from 4.38.2 to 4.39.1 [#151](https://github.com/jefferyjob/go-redislock/pull/151)
 - Bump github/codeql-action from 4.39.1 to 4.39.3 [#152](https://github.com/jefferyjob/go-redislock/pull/152)
 - 更新 .gitignore [#153](https://github.com/jefferyjob/go-redislock/pull/153)
-- 修复集成测试的状态残留与数据竞争问题
+- 修复集成测试的状态残留与数据竞争问题 [#154](https://github.com/jefferyjob/go-redislock/pull/154)
 
 > 注意：v1.5.0 和 v1.6.0 因适配器包名错误已被撤回（retract），请使用 v1.7.0 及以上版本。
 
