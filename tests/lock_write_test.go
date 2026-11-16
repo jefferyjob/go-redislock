@@ -97,11 +97,9 @@ func TestWLockReentrant(t *testing.T) {
 		if err != nil {
 			t.Errorf("Failed to lock: %v", err)
 		}
+		// 释放每一层可重入计数，避免残留的写锁影响后续测试
+		defer lock.WUnLock(ctx)
 
 		time.Sleep(time.Second * 1)
-
-		if i == 4 {
-			lock.WUnLock(ctx)
-		}
 	}
 }
