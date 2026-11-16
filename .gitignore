@@ -12,6 +12,9 @@
 *.test
 coverage.out
 coverage.txt
+coverage-unit.txt
+coverage-integration.txt
+junit.xml
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out

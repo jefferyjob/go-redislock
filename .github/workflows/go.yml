@@ -63,6 +63,13 @@ jobs:
       - name: Install gotestsum
         run: go install gotest.tools/gotestsum@v1.12.0
 
+      # 根模块单元测试基于 mock（不依赖 Redis），覆盖率写入 unit-coverage.txt。
+      # -coverpkg 限定只统计库本身的语句，避免把无测试的 mocks/examples 包计为 0%。
+      - name: Unit test and create coverage file
+        run: |
+          go test -race -coverpkg=github.com/jefferyjob/go-redislock \
+            -coverprofile=unit-coverage.txt -covermode=atomic ./...
+
       # 测试套件在 tests/ 独立模块中（多模块仓库，根目录的 ./... 不包含它），
       # 依赖本 job 的 Redis 服务（127.0.0.1:63790）。
       # -coverpkg 将覆盖率归属到根模块；gotestsum 一次运行同时产出 junit.xml 与 coverage.txt，
@@ -74,9 +81,11 @@ jobs:
             -race -coverprofile=../coverage.txt -covermode=atomic \
             -coverpkg=github.com/jefferyjob/go-redislock ./...
 
+      # 两份报告由 Codecov 合并：单测覆盖 Go 层分支，集成测试覆盖真实 Redis 语义。
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v7
         with:
+          files: ./coverage.txt,./unit-coverage.txt
           token: ${{secrets.CODECOV_TOKEN}}
 
       - name: Upload test results to Codecov

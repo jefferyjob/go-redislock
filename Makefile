@@ -20,9 +20,13 @@ doc: ## 启动文档服务器
 	godoc -http=:6060 -play -index
 
 .PHONY:cover
-cover: ## 生成测试覆盖率报告（在 tests/ 模块运行，依赖 Redis）
-	#go tool cover -func=coverage.out
-	cd tests && go test -race -coverprofile=../coverage.txt -covermode=atomic -coverpkg=github.com/jefferyjob/go-redislock ./...
+cover: ## 生成测试覆盖率报告（根模块单测 + tests/ 集成测试，依赖 Redis）
+	go test -race -coverpkg=github.com/jefferyjob/go-redislock -coverprofile=coverage-unit.txt -covermode=atomic ./...
+	cd tests && go test -race -coverprofile=../coverage-integration.txt -covermode=atomic -coverpkg=github.com/jefferyjob/go-redislock ./...
+	@echo "mode: atomic" > coverage.txt
+	@awk '!/^mode:/ { if (!($$1 in stmts)) { order[++n] = $$1; stmts[$$1] = $$2 } cnt[$$1] += $$3 } END { for (i = 1; i <= n; i++) print order[i], stmts[order[i]], cnt[order[i]] }' coverage-unit.txt coverage-integration.txt >> coverage.txt
+	@go tool cover -func=coverage.txt
+	@rm -f coverage-unit.txt coverage-integration.txt
 
 .PHONY:run-redis
 run-redis: ## Docker启动redis服务
