@@ -20,9 +20,9 @@ doc: ## 启动文档服务器
 	godoc -http=:6060 -play -index
 
 .PHONY:cover
-cover: ## 生成测试覆盖率报告
+cover: ## 生成测试覆盖率报告（在 tests/ 模块运行，依赖 Redis）
 	#go tool cover -func=coverage.out
-	go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+	cd tests && go test -race -coverprofile=../coverage.txt -covermode=atomic -coverpkg=github.com/jefferyjob/go-redislock ./...
 
 .PHONY:run-redis
 run-redis: ## Docker启动redis服务
