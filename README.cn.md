@@ -1,8 +1,8 @@
 # go-redislock
 <p align="center">
     <picture>
-        <source media="(prefers-color-scheme: light)" srcset="images/logo.png">
-        <img src="images/logo.png" alt="go-redislock" width="600">
+        <source media="(prefers-color-scheme: light)" srcset=".github/assets/logo.png">
+        <img src=".github/assets/logo.png" alt="go-redislock" width="600">
     </picture>
 </p>
 
