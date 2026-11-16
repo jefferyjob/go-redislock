@@ -7,12 +7,13 @@ import (
 )
 
 var (
+	// MultiLock 尚未实现，Lua 脚本先行保留备用。
 	//go:embed lua/multiLock.lua
-	multiLockScript string
+	multiLockScript string //nolint:unused // MultiLock 未实现，脚本保留备用
 	//go:embed lua/multiUnLock.lua
-	multiUnLockScript string
+	multiUnLockScript string //nolint:unused // MultiLock 未实现，脚本保留备用
 	//go:embed lua/multiRenew.lua
-	multiRenewScript string
+	multiRenewScript string //nolint:unused // MultiLock 未实现，脚本保留备用
 )
 
 func (l *RedisLock) MultiLock(ctx context.Context, locks []RedisLockInter) error {
