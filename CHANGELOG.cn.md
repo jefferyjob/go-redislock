@@ -1,3 +1,28 @@
+## v1.7.0
+- 适配器依赖更新 [#122](https://github.com/jefferyjob/go-redislock/pull/122)
+- 移除 goframe v1/v2 适配器 [#123](https://github.com/jefferyjob/go-redislock/pull/123)
+- 重构测试文件并更新 Redis 适配器导入路径 [#124](https://github.com/jefferyjob/go-redislock/pull/124)
+- 因适配器包名错误撤回 v1.5.0 和 v1.6.0 [#125](https://github.com/jefferyjob/go-redislock/pull/125)
+- 更新 go.mod 模块名以简化包结构 [#126](https://github.com/jefferyjob/go-redislock/pull/126)
+- 更新适配器文档 [#127](https://github.com/jefferyjob/go-redislock/pull/127)
+- 更新公平锁文档的清晰度与格式 [#131](https://github.com/jefferyjob/go-redislock/pull/131)
+- 新增项目 Logo [#132](https://github.com/jefferyjob/go-redislock/pull/132)
+- Bump codecov/codecov-action from 5 to 6 [#133](https://github.com/jefferyjob/go-redislock/pull/133)
+- README 文档更新 [#134](https://github.com/jefferyjob/go-redislock/pull/134)
+- Bump codecov/codecov-action from 6 to 7 [#137](https://github.com/jefferyjob/go-redislock/pull/137)
+- Bump actions/setup-go from 6 to 7 [#139](https://github.com/jefferyjob/go-redislock/pull/139)
+- 新增 CLAUDE.md 和 AGENTS.md 文档 [#140](https://github.com/jefferyjob/go-redislock/pull/140)
+- Bump github/codeql-action from 4 to 4.37.4 [#141](https://github.com/jefferyjob/go-redislock/pull/141)
+- Bump github/codeql-action from 4.37.4 to 4.37.8 [#144](https://github.com/jefferyjob/go-redislock/pull/144)
+- Bump github/codeql-action from 4.37.8 to 4.38.0 [#146](https://github.com/jefferyjob/go-redislock/pull/146)
+- Bump github/codeql-action from 4.38.0 to 4.38.2 [#148](https://github.com/jefferyjob/go-redislock/pull/148)
+- Bump github/codeql-action from 4.38.2 to 4.39.1 [#151](https://github.com/jefferyjob/go-redislock/pull/151)
+- Bump github/codeql-action from 4.39.1 to 4.39.3 [#152](https://github.com/jefferyjob/go-redislock/pull/152)
+- 更新 .gitignore [#153](https://github.com/jefferyjob/go-redislock/pull/153)
+- 修复集成测试的状态残留与数据竞争问题 [#154](https://github.com/jefferyjob/go-redislock/pull/154)
+
+> 注意：v1.5.0 和 v1.6.0 因适配器包名错误已被撤回（retract），请使用 v1.7.0 及以上版本。
+
 ## v1.5.0
 - adapter 进行独立的包管理 [#108](https://github.com/jefferyjob/go-redislock/pull/108)
 - 更新 changelog 文件 [#109](https://github.com/jefferyjob/go-redislock/pull/109)

@@ -103,6 +103,8 @@ func TestRLockReentrant(t *testing.T) {
 		if err != nil {
 			t.Errorf("Failed to lock: %v", err)
 		}
+		// 释放每一层可重入计数，避免残留的读锁影响后续测试
+		defer lock.RUnLock(ctx)
 		time.Sleep(time.Second * 1)
 	}
 }

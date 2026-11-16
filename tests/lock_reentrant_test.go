@@ -17,7 +17,7 @@ func Test_Lock(t *testing.T) {
 		name       string
 		inputKey   string
 		inputToken string
-		before     func(inputKey string)
+		before     func(inputKey string) func()
 		wantErr    error
 	}{
 		{
@@ -30,10 +30,14 @@ func Test_Lock(t *testing.T) {
 			name:       "创建锁对象-失败",
 			inputKey:   "test_key",
 			inputToken: "test_token",
-			before: func(inputKey string) {
+			before: func(inputKey string) func() {
 				ctx := context.Background()
 				lock := redislock.New(adapter, inputKey, redislock.WithToken("other_token"))
-				_ = lock.Lock(ctx)
+				if err := lock.Lock(ctx); err != nil {
+					return nil
+				}
+				// 返回清理函数，避免残留的锁影响后续测试
+				return func() { _ = lock.UnLock(ctx) }
 			},
 			wantErr: redislock.ErrLockFailed,
 		},
@@ -42,7 +46,9 @@ func Test_Lock(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if tt.before != nil {
-				tt.before(tt.inputKey)
+				if cleanup := tt.before(tt.inputKey); cleanup != nil {
+					defer cleanup()
+				}
 			}
 
 			ctx := context.Background()
@@ -169,6 +175,7 @@ func Test_SpinLock(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			lock := redislock.New(adapter, tt.inputKey, redislock.WithToken(tt.inputToken))
 
 			if tt.before != nil {
@@ -192,7 +199,6 @@ func Test_LockRenew(t *testing.T) {
 		inputKey        string
 		inputToken      string
 		inputRenewToken string
-		inputSleep      time.Duration
 		wantErr         error
 	}{
 		{
@@ -200,7 +206,6 @@ func Test_LockRenew(t *testing.T) {
 			inputKey:        "test_key",
 			inputToken:      "token_ok",
 			inputRenewToken: "token_ok",
-			inputSleep:      6 * time.Second,
 			wantErr:         nil,
 		},
 		{
@@ -208,7 +213,6 @@ func Test_LockRenew(t *testing.T) {
 			inputKey:        "test_key",
 			inputToken:      "token_fail",
 			inputRenewToken: "token_other",
-			inputSleep:      6 * time.Second,
 			wantErr:         redislock.ErrLockRenewFailed,
 		},
 	}
@@ -221,18 +225,14 @@ func Test_LockRenew(t *testing.T) {
 			require.NoError(t, err)
 			defer lock.UnLock(ctx)
 
-			go func() {
-				time.Sleep(time.Second * 2)
-				ctx := context.Background()
-				lock := redislock.New(adapter, tt.inputKey, redislock.WithToken(tt.inputRenewToken))
-				err = lock.Renew(ctx)
-				if !errors.Is(err, tt.wantErr) {
-					t.Errorf("expected error %v, got %v", tt.wantErr, err)
-				}
-			}()
+			// 等待一段时间，模拟持锁期间发起续期
+			time.Sleep(time.Second * 2)
 
-			// 等待一段时间，确保续期操作完成
-			time.Sleep(tt.inputSleep)
+			renewLock := redislock.New(adapter, tt.inputKey, redislock.WithToken(tt.inputRenewToken))
+			err = renewLock.Renew(ctx)
+			if !errors.Is(err, tt.wantErr) {
+				t.Errorf("expected error %v, got %v", tt.wantErr, err)
+			}
 		})
 	}
 }
@@ -266,6 +266,7 @@ func Test_LockAutoRenew(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			ctx, cancel := context.WithCancel(context.Background())
+			defer cancel()
 			lock := redislock.New(adapter, tt.inputKey,
 				redislock.WithToken(tt.inputToken),
 				redislock.WithAutoRenew(),

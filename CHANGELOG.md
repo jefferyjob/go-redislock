@@ -1,3 +1,28 @@
+## v1.7.0
+- Update adapter dependencies [#122](https://github.com/jefferyjob/go-redislock/pull/122)
+- Remove goframe v1/v2 adapter [#123](https://github.com/jefferyjob/go-redislock/pull/123)
+- Refactor test files and update Redis adapter import paths [#124](https://github.com/jefferyjob/go-redislock/pull/124)
+- Retract v1.5.0 and v1.6.0 due to adapter package name errors [#125](https://github.com/jefferyjob/go-redislock/pull/125)
+- Simplify package structure by updating module name in go.mod [#126](https://github.com/jefferyjob/go-redislock/pull/126)
+- Update adapter docs [#127](https://github.com/jefferyjob/go-redislock/pull/127)
+- Update fair lock documentation for clarity and formatting [#131](https://github.com/jefferyjob/go-redislock/pull/131)
+- Add project logo [#132](https://github.com/jefferyjob/go-redislock/pull/132)
+- Bump codecov/codecov-action from 5 to 6 [#133](https://github.com/jefferyjob/go-redislock/pull/133)
+- Update README docs [#134](https://github.com/jefferyjob/go-redislock/pull/134)
+- Bump codecov/codecov-action from 6 to 7 [#137](https://github.com/jefferyjob/go-redislock/pull/137)
+- Bump actions/setup-go from 6 to 7 [#139](https://github.com/jefferyjob/go-redislock/pull/139)
+- Add CLAUDE.md and AGENTS.md docs [#140](https://github.com/jefferyjob/go-redislock/pull/140)
+- Bump github/codeql-action from 4 to 4.37.4 [#141](https://github.com/jefferyjob/go-redislock/pull/141)
+- Bump github/codeql-action from 4.37.4 to 4.37.8 [#144](https://github.com/jefferyjob/go-redislock/pull/144)
+- Bump github/codeql-action from 4.37.8 to 4.38.0 [#146](https://github.com/jefferyjob/go-redislock/pull/146)
+- Bump github/codeql-action from 4.38.0 to 4.38.2 [#148](https://github.com/jefferyjob/go-redislock/pull/148)
+- Bump github/codeql-action from 4.38.2 to 4.39.1 [#151](https://github.com/jefferyjob/go-redislock/pull/151)
+- Bump github/codeql-action from 4.39.1 to 4.39.3 [#152](https://github.com/jefferyjob/go-redislock/pull/152)
+- Update .gitignore [#153](https://github.com/jefferyjob/go-redislock/pull/153)
+- Fix test isolation issues and data race in integration tests [#154](https://github.com/jefferyjob/go-redislock/pull/154)
+
+> Note: v1.5.0 and v1.6.0 have been retracted due to adapter package name errors. Please use v1.7.0 or later.
+
 ## v1.5.0
 - Manage adapter as an independent package [#108](https://github.com/jefferyjob/go-redislock/pull/108)
 - Update changelog file [#109](https://github.com/jefferyjob/go-redislock/pull/109)
