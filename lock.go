@@ -61,15 +61,6 @@ type RedisLockInter interface {
 	SpinWLock(ctx context.Context, timeout time.Duration) error
 	// WRenew 写锁续期
 	WRenew(ctx context.Context) error
-
-	// MultiLock 联锁加锁
-	// MultiLock(ctx context.Context, locks []RedisLockInter) error
-	// MultiUnLock 联锁解锁
-	// MultiUnLock(ctx context.Context, locks []RedisLockInter) error
-	// SpinMultiLock 自旋联锁
-	// SpinMultiLock(ctx context.Context, locks []RedisLockInter, timeout time.Duration) error
-	// MultiRenew 联锁续期
-	// MultiRenew(ctx context.Context, locks []RedisLockInter) error
 }
 
 type RedisLock struct {
