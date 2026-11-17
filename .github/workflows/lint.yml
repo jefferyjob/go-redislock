@@ -26,6 +26,6 @@ jobs:
 
       # 仓库无 .golangci.yml 配置文件，使用 golangci-lint 默认规则（与 make lint 一致）
       - name: golangci-lint
-        uses: golangci/golangci-lint-action@v8
+        uses: golangci/golangci-lint-action@v9
         with:
           version: latest
