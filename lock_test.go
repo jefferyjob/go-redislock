@@ -88,6 +88,26 @@ func Test_New_Options(t *testing.T) {
 			t.Fatalf("FairLock() error = %v", err)
 		}
 	})
+
+	t.Run("非正数超时回退默认值", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		mock := mocks.NewMockRedisInter(ctrl)
+		// WithTimeout(0) 与 WithRequestTimeout(负值) 均应回退到默认 5000ms
+		mock.EXPECT().Eval(gomock.Any(), gomock.Any(), gomock.Eq([]string{"unit_key"}),
+			gomock.Any(), int64(5000)).Return(fakeCmd{result: 1})
+		mock.EXPECT().Eval(gomock.Any(), gomock.Any(), gomock.Eq([]string{"unit_key"}),
+			"req-1", int64(5000), int64(5000)).Return(fakeCmd{result: 1})
+
+		lock := go_redislock.New(mock, "unit_key",
+			go_redislock.WithTimeout(0),
+			go_redislock.WithRequestTimeout(-time.Second))
+		if err := lock.Lock(context.Background()); err != nil {
+			t.Fatalf("Lock() error = %v", err)
+		}
+		if err := lock.FairLock(context.Background(), "req-1"); err != nil {
+			t.Fatalf("FairLock() error = %v", err)
+		}
+	})
 }
 
 // Test_Result_Mapping 验证各锁族方法对 Lua 脚本返回值的映射:
