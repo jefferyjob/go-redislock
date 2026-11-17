@@ -25,4 +25,6 @@ var (
 	ErrLockRenewFailed = errors.New("lock renew failed")
 	// ErrException 内部异常
 	ErrException = errors.New("go redis lock internal exception")
+	// ErrNotImplemented 功能尚未实现（联锁 MultiLock 系列当前未实现）
+	ErrNotImplemented = errors.New("not implemented")
 )

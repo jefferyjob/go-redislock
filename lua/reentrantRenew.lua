@@ -23,21 +23,19 @@
         值：整数，表示当前客户端的重入次数
 
     执行逻辑：
-    1. 读取当前客户端对应的可重入计数器（reentrant_key）；
-    2. 满足以下任意一个条件即认为客户端持有锁，可以续期：
-        - 可重入计数器存在（reentrant_count > 0）
-        - 主锁值等于当前客户端的标识（redis.call('GET', lock_key) == lock_value）
-    3. 若满足续期条件：
-        - 刷新主锁和重入计数器的过期时间（PEXPIRE）；
-        - 返回 1 表示续期成功；
-    4. 否则（锁不存在或不是当前客户端持有），返回 nil。
+    1. 以"主锁的值等于当前客户端标识"作为持有锁的唯一判据：
+        - 满足则刷新主锁和重入计数器的过期时间（PEXPIRE），返回 1 表示续期成功；
+        - 不满足（锁不存在或已被其他客户端持有）返回 0。
+    2. 不允许仅凭残留的重入计数器续期：计数器 key 的 TTL 略晚于主锁，
+       且锁丢失后计数器可能残留；若只看计数器，会在已失去锁的情况下
+       误报续期成功（掩盖锁丢失），甚至为他人新加的锁刷新 TTL。
 
     返回值：
     - 1：续期成功（当前客户端仍持有锁）
     - 0 ：续期失败（锁不存在或非本客户端持有）
 
     注意事项：
-    - 客户端应定时调用该脚本以实现“自动续租”功能；
+    - 客户端应定时调用该脚本以实现"自动续租"功能；
     - 续期操作需要和加锁、解锁脚本配套使用，并保持客户端 lock_value 一致；
     - 锁 key 和重入计数器 key 使用 Redis hash tag `{}` 包裹，确保在 Redis Cluster 下分布在同一 slot。
 
@@ -48,12 +46,9 @@ local lock_key = '{' .. KEYS[1] .. '}'
 local lock_value = ARGV[1]
 local lock_ttl = tonumber(ARGV[2])
 local reentrant_key = lock_key .. ':count:' .. lock_value
-local reentrant_count = tonumber(redis.call('GET', reentrant_key) or '0')
 
--- 锁续期
--- 重入锁的场景（reentrant_count > 0）
--- 普通锁的场景（redis.call('GET', lock_key) == lock_value）
-if reentrant_count > 0 or redis.call('GET', lock_key) == lock_value then
+-- 锁续期：必须校验主锁归属（重入计数器可能比主锁残留更久，不能单独作为持锁依据）
+if redis.call('GET', lock_key) == lock_value then
     redis.call('PEXPIRE', lock_key, lock_ttl)
     redis.call('PEXPIRE', reentrant_key, lock_ttl)
     return 1

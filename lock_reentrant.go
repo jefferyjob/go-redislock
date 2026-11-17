@@ -4,7 +4,6 @@ import (
 	"context"
 	_ "embed"
 	"errors"
-	"log"
 	"time"
 )
 
@@ -36,11 +35,8 @@ func (l *RedisLock) Lock(ctx context.Context) error {
 		return ErrLockFailed
 	}
 
-	if l.isAutoRenew {
-		ctxRenew, cancel := context.WithCancel(ctx)
-		l.autoRenewCancel = cancel
-		go l.autoRenew(ctxRenew)
-	}
+	// 可重入加锁时复用已在运行的续期 goroutine，避免泄漏
+	l.startAutoRenew(l.Renew)
 
 	return nil
 }
@@ -51,11 +47,6 @@ func (l *RedisLock) Lock(ctx context.Context) error {
 // UnLock 释放普通锁。
 // 如果为重入锁，每调用一次减少一次持有计数，直到计数为 0 锁会被释放
 func (l *RedisLock) UnLock(ctx context.Context) error {
-	// 如果已经创建了取消函数，则执行取消操作
-	if l.autoRenewCancel != nil {
-		l.autoRenewCancel()
-	}
-
 	result, err := l.redis.Eval(
 		ctx,
 		reentrantUnLockScript,
@@ -65,11 +56,18 @@ func (l *RedisLock) UnLock(ctx context.Context) error {
 	if err != nil {
 		return errors.Join(err, ErrException)
 	}
-	if result != 1 {
+
+	switch result {
+	case 2:
+		// 部分解锁：锁仍被持有，自动续期继续保持
+		return nil
+	case 1:
+		// 完全释放：停止自动续期
+		l.stopAutoRenew()
+		return nil
+	default:
 		return ErrUnLockFailed
 	}
-
-	return nil
 }
 
 // SpinLock keeps trying to acquire the lock until timeout.
@@ -116,23 +114,4 @@ func (l *RedisLock) Renew(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// 锁自动续期
-func (l *RedisLock) autoRenew(ctx context.Context) {
-	ticker := time.NewTicker(l.lockTimeout / 3)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			err := l.Renew(ctx)
-			if err != nil {
-				log.Printf("Error: autoRenew failed, %v", err)
-				return
-			}
-		}
-	}
 }

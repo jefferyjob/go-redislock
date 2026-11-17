@@ -172,3 +172,45 @@ func Test_Result_Mapping(t *testing.T) {
 		}
 	}
 }
+
+// Test_UnLock_Partial_Release 验证可重入解锁脚本的"部分释放"返回值(2):
+// 解锁视为成功(nil),且自动续期不被停止(锁仍被持有)。
+// 覆盖可重入锁、读锁、写锁三个支持部分解锁的锁族;公平锁无部分解锁语义,不适用。
+func Test_UnLock_Partial_Release(t *testing.T) {
+	cases := []struct {
+		name string
+		call func(l go_redislock.RedisLockInter, ctx context.Context) error
+	}{
+		{"UnLock", func(l go_redislock.RedisLockInter, ctx context.Context) error { return l.UnLock(ctx) }},
+		{"RUnLock", func(l go_redislock.RedisLockInter, ctx context.Context) error { return l.RUnLock(ctx) }},
+		{"WUnLock", func(l go_redislock.RedisLockInter, ctx context.Context) error { return l.WUnLock(ctx) }},
+	}
+
+	for _, tt := range cases {
+		t.Run(tt.name, func(t *testing.T) {
+			ctrl := gomock.NewController(t)
+			mock := mocks.NewMockRedisInter(ctrl)
+			// 解锁脚本只有 1 个 ARGV 参数
+			mock.EXPECT().Eval(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+				Return(fakeCmd{result: 2})
+
+			lock := go_redislock.New(mock, "unit_key", go_redislock.WithToken("token-1"))
+			if err := tt.call(lock, context.Background()); err != nil {
+				t.Errorf("%s: 部分解锁应返回 nil,实际 %v", tt.name, err)
+			}
+		})
+	}
+}
+
+// Test_UnLock_Fair_NotHolder 验证公平锁解锁脚本返回 0(非持有者)时映射为 ErrUnLockFailed
+func Test_UnLock_Fair_NotHolder(t *testing.T) {
+	ctrl := gomock.NewController(t)
+	mock := mocks.NewMockRedisInter(ctrl)
+	mock.EXPECT().Eval(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).
+		Return(fakeCmd{result: 0})
+
+	lock := go_redislock.New(mock, "unit_key", go_redislock.WithToken("token-1"))
+	if err := lock.FairUnLock(context.Background(), "req-1"); !errors.Is(err, go_redislock.ErrUnLockFailed) {
+		t.Errorf("期望 ErrUnLockFailed,实际 %v", err)
+	}
+}

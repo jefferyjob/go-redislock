@@ -4,7 +4,6 @@ import (
 	"context"
 	_ "embed"
 	"errors"
-	"log"
 	"time"
 )
 
@@ -32,21 +31,13 @@ func (l *RedisLock) WLock(ctx context.Context) error {
 		return ErrLockFailed
 	}
 
-	if l.isAutoRenew {
-		ctxRenew, cancel := context.WithCancel(ctx)
-		l.autoRenewCancel = cancel
-		go l.autoWLockRenew(ctxRenew)
-	}
+	// 可重入加锁时复用已在运行的续期 goroutine，避免泄漏
+	l.startAutoRenew(l.WRenew)
 
 	return nil
 }
 
 func (l *RedisLock) WUnLock(ctx context.Context) error {
-	// 如果已经创建了取消函数，则执行取消操作
-	if l.autoRenewCancel != nil {
-		l.autoRenewCancel()
-	}
-
 	res, err := l.redis.Eval(
 		ctx,
 		writeUnLockScript,
@@ -56,11 +47,18 @@ func (l *RedisLock) WUnLock(ctx context.Context) error {
 	if err != nil {
 		return errors.Join(err, ErrException)
 	}
-	if res != 1 {
+
+	switch res {
+	case 2:
+		// 部分解锁：仍持有写锁，自动续期继续保持
+		return nil
+	case 1:
+		// 写锁已完全释放：停止自动续期
+		l.stopAutoRenew()
+		return nil
+	default:
 		return ErrUnLockFailed
 	}
-
-	return nil
 }
 
 func (l *RedisLock) SpinWLock(ctx context.Context, timeout time.Duration) error {
@@ -103,23 +101,4 @@ func (l *RedisLock) WRenew(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// 锁自动续期
-func (l *RedisLock) autoWLockRenew(ctx context.Context) {
-	ticker := time.NewTicker(l.lockTimeout / 3)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			err := l.WRenew(ctx)
-			if err != nil {
-				log.Printf("Error: autoWRenew failed, %v", err)
-				return
-			}
-		}
-	}
 }

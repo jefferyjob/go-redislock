@@ -125,3 +125,67 @@ func Test_AutoRenew(t *testing.T) {
 		})
 	}
 }
+
+// Test_AutoRenew_PartialUnlock 验证可重入场景下的续期生命周期:
+// 部分解锁(脚本返回 2)后锁仍被持有,续期必须继续;完全解锁(返回 1)后续期停止。
+func Test_AutoRenew_PartialUnlock(t *testing.T) {
+	var calls atomic.Int64
+	var unlockResult atomic.Int64
+	unlockResult.Store(2)
+
+	ctrl := gomock.NewController(t)
+	mock := mocks.NewMockRedisInter(ctrl)
+	// 路由规则:首次调用为加锁(成功),之后按 ARGV 个数区分——
+	// 1 个参数是解锁(返回 unlockResult),2 个参数是续期(成功)
+	fn := func(ctx context.Context, script string, keys []string, args ...interface{}) go_redislock.RedisCmd {
+		switch calls.Add(1) {
+		case 1:
+			return fakeCmd{result: 1} // 加锁
+		default:
+			if len(args) == 1 {
+				return fakeCmd{result: int64(unlockResult.Load())} // 解锁
+			}
+			return fakeCmd{result: 1} // 续期
+		}
+	}
+	for _, numArgs := range []int{1, 2} {
+		args := make([]interface{}, numArgs)
+		for i := range args {
+			args[i] = gomock.Any()
+		}
+		mock.EXPECT().Eval(gomock.Any(), gomock.Any(), gomock.Any(), args...).DoAndReturn(fn).AnyTimes()
+	}
+
+	lock := go_redislock.New(mock, "unit_key",
+		go_redislock.WithToken("token-1"),
+		go_redislock.WithAutoRenew(),
+		go_redislock.WithTimeout(90*time.Millisecond)) // 续期周期 30ms
+
+	ctx := context.Background()
+	if err := lock.Lock(ctx); err != nil {
+		t.Fatalf("加锁失败:%v", err)
+	}
+	waitFor(t, 2*time.Second, "等待周期续期发生", func() bool {
+		return calls.Load() >= 3
+	})
+
+	// 部分解锁(返回 2):续期应继续进行
+	if err := lock.UnLock(ctx); err != nil {
+		t.Fatalf("部分解锁失败:%v", err)
+	}
+	afterPartial := calls.Load()
+	waitFor(t, 2*time.Second, "部分解锁后续期应继续", func() bool {
+		return calls.Load() > afterPartial+1 // 允许 1 次在途调用
+	})
+
+	// 完全解锁(返回 1):续期应停止
+	unlockResult.Store(1)
+	if err := lock.UnLock(ctx); err != nil {
+		t.Fatalf("完全解锁失败:%v", err)
+	}
+	afterFull := calls.Load()
+	time.Sleep(150 * time.Millisecond)
+	if got := calls.Load(); got > afterFull+1 {
+		t.Errorf("完全解锁后续期 goroutine 未停止:调用数 %d -> %d", afterFull, got)
+	}
+}

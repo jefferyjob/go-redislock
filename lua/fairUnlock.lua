@@ -17,19 +17,19 @@
     2. 排队键（{KEYS[1]}:queue）：ZSET，记录所有等待请求，score 为时间戳。
 
     执行逻辑：
-    1. 若当前请求 ID 与锁键中的值一致（是锁的持有者），则删除锁键；
+    1. 若当前请求 ID 与锁键中的值一致（是锁的持有者），则删除锁键并记为解锁成功；
     2. 无论是否持有锁，统一从 ZSET 排队队列中移除该请求 ID；
-    3. 返回 "OK" 表示执行成功。
+    3. 返回是否真正释放了锁。
 
     返回值：
-    - "OK"：无论是否实际持有锁，解锁请求都被成功处理（幂等）
+    - 1：解锁成功（当前请求是持有者，锁键已删除）
+    - 0 ：解锁失败（锁不存在或当前请求不是持有者）；排队记录仍会被移除
 
     注意事项：
     - 使用 `GET lock_key == request_id` 判断是否是锁的持有者；
     - 解锁时必须确保 request_id 和加锁时保持一致；
-    - 该脚本是幂等的，多次调用不会产生副作用；
+    - 队列清理（ZREM）是幂等的，多次调用不会产生副作用；
     - 与基于 ZSET 的加锁脚本配套使用效果最佳。
-
 --]]
 
 
@@ -37,12 +37,14 @@ local lock_key = '{' .. KEYS[1] .. '}'
 local queue_key = lock_key .. ':queue'
 local request_id = ARGV[1]
 
+local unlocked = 0
 -- 删除锁键（只删除自己持有的锁）
 if redis.call('GET', lock_key) == request_id then
     redis.call('DEL', lock_key)
+    unlocked = 1
 end
 
 -- 从队列中删除请求ID
 redis.call('ZREM', queue_key, request_id)
 
-return 1
+return unlocked
