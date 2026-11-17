@@ -24,12 +24,14 @@
         值：整数，表示客户端当前持有锁的重入次数
 
     执行逻辑：
-    1. 首先尝试读取客户端自己的可重入计数器；
-        - 如果大于 0，说明该客户端已经持有锁：
+    1. 首先校验主锁归属，并读取客户端自己的可重入计数器；
+        - 如果计数器大于 0 且主锁的值等于当前客户端标识，说明该客户端确实持有锁：
             - 将重入计数加 1；
             - 刷新主锁和计数器的过期时间；
             - 返回 1，表示加锁成功。
-    2. 如果计数器不存在或为 0，说明该客户端未持有锁：
+        - 双重校验可防止主锁过期被其他客户端抢走后、本端残留计数器误判为可重入，
+          避免出现两个客户端同时"持有"锁而破坏互斥。
+    2. 如果计数器不存在或为 0（或主锁不属于本端），说明该客户端未持有锁：
         - 尝试使用 SET NX PX 加锁；
         - 如果成功，设置可重入计数器为 1，并设置过期时间；
         - 返回 1，表示加锁成功。
@@ -52,8 +54,8 @@ local lock_ttl = tonumber(ARGV[2])
 local reentrant_key = lock_key .. ':count:' .. lock_value
 local reentrant_count = tonumber(redis.call('GET', reentrant_key) or '0')
 
--- 可重入锁计数器
-if reentrant_count > 0 then
+-- 可重入锁计数器（必须同时校验主锁归属，防止主锁过期后凭残留计数器误判为可重入）
+if reentrant_count > 0 and redis.call('GET', lock_key) == lock_value then
     redis.call('INCR', reentrant_key)
     redis.call('PEXPIRE', lock_key, lock_ttl)
     redis.call('PEXPIRE', reentrant_key, lock_ttl)

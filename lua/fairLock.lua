@@ -41,7 +41,8 @@
     - 可扩展为锁续期、解锁和队列清理等完整锁管理模块。
 
     注意事项：
-    - 当前时间使用 `redis.call('TIME')[1]`，单位为秒；
+    - 当前时间使用 `redis.call('TIME')`，由秒 + 微秒组合成毫秒级时间戳，
+      保证同一秒内的请求也能按到达先后排序；
     - 脚本设计为幂等，重复调用不会产生副作用；
     - 若客户端意外宕机未解锁，锁将在 TTL 后自动释放，但队列中残留项会自动过期清除；
     - 可根据需要改为毫秒时间戳并配合 PEXPIRE 精细控制。
@@ -55,9 +56,9 @@ local request_id = ARGV[1]
 local lock_ttl = tonumber(ARGV[2])
 local request_timeout = tonumber(ARGV[3])
 
--- 当前毫秒数
-local current_time = tonumber(redis.call('TIME')[1])
-local current_time_ms  = current_time * 1000
+-- 当前毫秒数（TIME 返回 {秒, 微秒}，组合出毫秒级精度，避免同一秒内请求排序退化）
+local t = redis.call('TIME')
+local current_time_ms = tonumber(t[1]) * 1000 + math.floor(tonumber(t[2]) / 1000)
 
 -- 清理超时的请求
 redis.call('ZREMRANGEBYSCORE', queue_key, 0, current_time_ms - request_timeout)

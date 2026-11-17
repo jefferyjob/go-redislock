@@ -4,7 +4,6 @@ import (
 	"context"
 	_ "embed"
 	"errors"
-	"log"
 	"time"
 )
 
@@ -38,11 +37,10 @@ func (l *RedisLock) FairLock(ctx context.Context, requestId string) error {
 		return ErrLockFailed
 	}
 
-	if l.isAutoRenew {
-		ctxRenew, cancel := context.WithCancel(ctx)
-		l.autoRenewCancel = cancel
-		go l.autoFairRenew(ctxRenew, requestId)
-	}
+	// 可重入加锁时复用已在运行的续期 goroutine，避免泄漏
+	l.startAutoRenew(func(ctx context.Context) error {
+		return l.FairRenew(ctx, requestId)
+	})
 
 	return nil
 }
@@ -73,12 +71,11 @@ func (l *RedisLock) SpinFairLock(ctx context.Context, requestId string, timeout 
 }
 
 // FairUnLock releases the fair lock held by the given requestId.
+// It returns ErrUnLockFailed if the lock does not exist or is held by another requestId.
+//
 // FairUnLock 根据 requestId 释放公平锁。
+// 若锁不存在或由其他 requestId 持有，返回 ErrUnLockFailed。
 func (l *RedisLock) FairUnLock(ctx context.Context, requestId string) error {
-	if l.autoRenewCancel != nil {
-		l.autoRenewCancel()
-	}
-
 	result, err := l.redis.Eval(
 		ctx,
 		fairUnLockScript,
@@ -93,6 +90,9 @@ func (l *RedisLock) FairUnLock(ctx context.Context, requestId string) error {
 	if result != 1 {
 		return ErrUnLockFailed
 	}
+
+	// 完全释放：停止自动续期
+	l.stopAutoRenew()
 
 	return nil
 }
@@ -117,23 +117,4 @@ func (l *RedisLock) FairRenew(ctx context.Context, requestId string) error {
 	}
 
 	return nil
-}
-
-// 锁自动续期
-func (l *RedisLock) autoFairRenew(ctx context.Context, requestId string) {
-	ticker := time.NewTicker(l.lockTimeout / 3)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return
-		case <-ticker.C:
-			err := l.FairRenew(ctx, requestId)
-			if err != nil {
-				log.Printf("Error: autoFairRenew failed, Err: %v \n", err)
-				return
-			}
-		}
-	}
 }
